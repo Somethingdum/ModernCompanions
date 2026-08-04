@@ -5,6 +5,7 @@ import com.majorbonghits.moderncompanions.compat.magic.MagicCastingCompat;
 import com.majorbonghits.moderncompanions.item.AssignmentWandItem;
 import com.majorbonghits.moderncompanions.item.CommandBatonItem;
 import com.majorbonghits.moderncompanions.item.CompanionMoverItem;
+import com.majorbonghits.moderncompanions.item.PerimeterRodItem;
 import com.majorbonghits.moderncompanions.item.ResurrectionScrollItem;
 import com.majorbonghits.moderncompanions.item.SummoningWandItem;
 import com.majorbonghits.moderncompanions.item.StoredCompanionItem;
@@ -42,6 +43,8 @@ public final class ModItems {
             () -> new SummoningWandItem(new Item.Properties()));
     public static final DeferredHolder<Item, Item> COMMAND_BATON = ITEMS.register("command_baton",
             () -> new CommandBatonItem(new Item.Properties()));
+    public static final DeferredHolder<Item, Item> PERIMETER_ROD = ITEMS.register("perimeter_rod",
+            () -> new PerimeterRodItem(new Item.Properties()));
 
     // Intermediate vessels stay out of creative tabs; brewing is their only purpose.
     public static final DeferredHolder<Item, Item> EMPTY_ROUND_VESSEL = vessel("empty_round_vessel");

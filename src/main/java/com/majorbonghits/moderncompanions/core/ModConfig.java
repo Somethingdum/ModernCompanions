@@ -70,6 +70,8 @@ public final class ModConfig {
     public static ModConfigSpec.EnumValue<CompanionSurvivalProfile> COMBAT_SURVIVAL_PROFILE;
     public static ModConfigSpec.BooleanValue COMBAT_SECOND_WIND_ENABLED;
     public static ModConfigSpec.IntValue COMBAT_AVENGE_TICKS;
+    public static ModConfigSpec.IntValue ZONE_DEPTH_BELOW;
+    public static ModConfigSpec.IntValue ZONE_HEIGHT_ABOVE;
     public static ModConfigSpec.BooleanValue TRAITS_ENABLED;
     public static ModConfigSpec.IntValue SECONDARY_TRAIT_CHANCE;
     public static ModConfigSpec.BooleanValue BOND_ENABLED;
@@ -338,6 +340,17 @@ public final class ModConfig {
         COMBAT_AVENGE_TICKS = builder.translation("modern_companions.configuration.combat.avenge_ticks")
                 .comment("How long companions refuse to break off after you are downed or killed (20 ticks = 1 second).")
                 .defineInRange("avengeTicks", 600, 0, 24000);
+        builder.pop();
+
+        builder.translation("modern_companions.configuration.zones").push("zones");
+        ZONE_DEPTH_BELOW = builder.translation("modern_companions.configuration.zones.depth_below")
+                .comment("How far below the lower marked corner a perimeter zone extends. A surface-only box is",
+                        "trivially bypassed by tunnelling underneath it, so zones reach down by default.")
+                .defineInRange("depthBelow", 12, 0, 128);
+        ZONE_HEIGHT_ABOVE = builder.translation("modern_companions.configuration.zones.height_above")
+                .comment("How far above the higher marked corner a perimeter zone extends, covering phantoms,",
+                        "ghasts, and anything else that arrives over the wall rather than through it.")
+                .defineInRange("heightAbove", 24, 0, 256);
         builder.pop();
 
         builder.translation("modern_companions.configuration.navigation").push("navigation");

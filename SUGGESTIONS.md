@@ -479,3 +479,12 @@
 - `SquadService.loadedMembers` iterates every level for every member id. That is fine for a personal server with a handful of squads, but if it ever shows up in profiling, cache an owner-to-companion index instead.
 - Decide whether `MOVE_TO` should clear itself on arrival. It currently persists, so a squad that is knocked away from the destination walks back, which is usually right for a rally point and occasionally surprising after a fight.
 - Consider making the baton's destination marker persist for a few seconds rather than a single particle burst, so the player can see where a squad is headed after issuing the order.
+
+## 2026-08-04 (perimeter zones and the Perimeter Rod)
+
+- The breach ledger described in the plan is not implemented yet. Zones exist and squads can be posted to them, but nothing yet sweeps a zone for hostiles or warns the player when something is inside that no companion has perceived. That is the piece that makes the perimeter promise honest, and it should come with the perception layer.
+- Sentry posts are assigned once, when a squad is posted. Recompute them when a member dies or joins, otherwise a four-guard base silently becomes a three-guard base with a gap.
+- Zone outlines are drawn as a one-off particle burst at the sample points. A held-rod pulse that traces the full edge every ten ticks would make the boundary far easier to see while building.
+- Consider a `/zone` command set mirroring `/squad` for listing, renaming, and deleting zones; right now a zone can be created but not removed except by hitting the per-player cap.
+- Verify the interaction between a posted ward radius and the companion patrol radius. `wardRadius` derives from the zone footprint and overwrites whatever the player had configured, which is usually right but is silent.
+- The rod and the baton currently share the wand texture. Distinct textures would help, since both are held tools with different click semantics.

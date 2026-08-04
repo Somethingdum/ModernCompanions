@@ -69,6 +69,7 @@ public final class ModCreativeTabs {
                         output.accept(com.majorbonghits.moderncompanions.core.ModItems.STORED_COMPANION.get());
                         output.accept(com.majorbonghits.moderncompanions.core.ModItems.SUMMONING_WAND.get());
                         output.accept(com.majorbonghits.moderncompanions.core.ModItems.COMMAND_BATON.get());
+                        output.accept(com.majorbonghits.moderncompanions.core.ModItems.PERIMETER_ROD.get());
                         output.accept(com.majorbonghits.moderncompanions.core.ModItems.EMPTY_ROUND_VESSEL.get());
                         output.accept(com.majorbonghits.moderncompanions.core.ModItems.EMPTY_RECTANGLE_VESSEL.get());
                         output.accept(com.majorbonghits.moderncompanions.core.ModItems.EMPTY_PYRAMID_VESSEL.get());
