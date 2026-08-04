@@ -415,3 +415,14 @@
 - Reproduce and fix the `Ideas.md` archer crash before increasing ranged aggression; inspect `Archer#performRangedAttack` for an empty `getProjectile` result and for entity-tick reentrancy when the arrow is spawned.
 - Prefer live radius reads over the cached `PatrolGoal.radius`/`MoveBackToPatrolGoal.radius` fields so radius changes never require constructing and re-registering goals.
 - Make modded-mob knowledge data-driven from the start: `HuntGoal`'s hardcoded entity list and the planned threat profiles should both resolve through datapack JSON plus tags rather than Java constants.
+
+## 2026-08-04 (total overhaul plan: squads, navigation, creepers, resolve)
+
+- Execute phase 0 of `PLAN_COMPANION_AI.md` before any feature work. It is pure defect repair and several items are server-wide rather than companion-local.
+- Highest-priority performance fix: `CompanionProtectionEvents.enforceSummonTarget` subscribes to `EntityTickEvent.Pre`, which fires for every mob in the world, and calls `getClass().getMethod("getSummoner")` on each one. For mobs without that method this constructs and throws a `NoSuchMethodException` every tick. Cache resolution per class in a `ClassValue` with a null sentinel, guard the handler behind `MagicCastingCompat.available()`, and raise the idle poll interval.
+- Second performance fix: `CompanionVoice.playEnemySpotted` iterates `serverLevel.getEntities().getAll()` on every callout. The squad roster introduced in phase 4 replaces this scan entirely.
+- Highest-value behavioral fix: give `CompanionGroundPathNavigation` its own search radius instead of `Attributes.FOLLOW_RANGE`. Vanilla derives both the path search radius and the visited-node budget from that attribute, so 20 blocks is the current hard ceiling on path length and is the direct cause of teleport reliance.
+- Verify the load-time weapon loss described as D-25 before fixing it: place a uniquely named sword directly into a companion's main-hand equipment slot without a copy in its inventory, save, reload, and confirm whether the item survives `readAdditionalSaveData` clearing the slot ahead of `checkSword`.
+- Reproduce the `Ideas.md` archer crash with assertions enabled before increasing archer aggression, and record the stack trace in `TRACELOG.md`. The plan lists four ranked hypotheses; do not fix speculatively.
+- Register subclass combat goals through an overridable hook called from `registerGoals` rather than from subclass constructors, so `Vanguard` stops inheriting `Knight`'s melee goal in addition to its own.
+- Schedule the `TASK.md` jobs revamp after phases 0 through 2 of this plan; the navigation work removes a large share of the travel and stall problems that audit describes.
