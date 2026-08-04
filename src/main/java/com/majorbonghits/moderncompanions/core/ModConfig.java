@@ -76,6 +76,7 @@ public final class ModConfig {
     public static ModConfigSpec.IntValue PERCEPTION_SWEEP_INTERVAL;
     public static ModConfigSpec.IntValue ZONE_DEPTH_BELOW;
     public static ModConfigSpec.IntValue ZONE_HEIGHT_ABOVE;
+    public static ModConfigSpec.IntValue ZONE_ALERT_SECONDS;
     public static ModConfigSpec.BooleanValue STARTER_ENABLED;
     public static ModConfigSpec.EnumValue<StarterCompanionGear> STARTER_GEAR;
     public static ModConfigSpec.BooleanValue STARTER_GRANT_TOOLS;
@@ -390,6 +391,11 @@ public final class ModConfig {
                 .comment("How far above the higher marked corner a perimeter zone extends, covering phantoms,",
                         "ghasts, and anything else that arrives over the wall rather than through it.")
                 .defineInRange("heightAbove", 24, 0, 256);
+        ZONE_ALERT_SECONDS = builder.translation("modern_companions.configuration.zones.alert_seconds")
+                .comment("How long something may sit inside a guarded zone, unseen by any guard, before you are",
+                        "warned. Companions are limited to what they can actually perceive, so rather than",
+                        "pretending nothing can ever slip past, anything that does is reported to you.")
+                .defineInRange("alertSeconds", 15, 1, 300);
         builder.pop();
 
         builder.translation("modern_companions.configuration.navigation").push("navigation");

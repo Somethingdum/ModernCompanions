@@ -514,3 +514,11 @@
 - The zone-intrusion term in `ThreatAssessment` is wired to a constant false at both call sites because perception does not know about zones yet. Connect it when the breach ledger lands, otherwise guards will not actually prioritise intruders over ambient mobs.
 - Profile the sweep with eight companions and a few hundred mobs. Sweeps are phase-offset and bounded, but `bestTarget` and `scoreOf` each run a squadmate query, and those could be hoisted to once per sweep rather than once per call.
 - The reaction delay is applied on acquisition only. Consider also applying it after losing and regaining a target, so repeated flickering in and out of cover is not instantly punished.
+
+## 2026-08-04 (zone breach ledger and investigation)
+
+- Smoke-test the honest-failure path deliberately: wall off a dark room inside a guarded zone, let something spawn in it, and confirm the warning arrives after the grace period rather than a guard magically walking in on it.
+- Confirm no breach warnings fire when logging into a world with existing zones; the unloaded-chunk guard is what prevents that and it is the most likely thing to be wrong.
+- `ZoneBreachTracker` holds its unseen-since and last-warned maps in static fields keyed by zone id. They are pruned as intruders leave, but a deleted zone leaks two small entries until `forget` is called, and nothing calls it yet. Wire it into zone deletion when a `/zone remove` command exists.
+- The zone-intrusion term in `ThreatAssessment` is still passed false everywhere. Now that the tracker knows which entities are inside a zone, it could mark contacts so guards prioritise intruders over ambient mobs outside the walls.
+- Consider whether the investigation cue should also be raised by hearing, as the plan describes. Only zone breaches raise cues today, so a companion escorting the player never investigates anything.

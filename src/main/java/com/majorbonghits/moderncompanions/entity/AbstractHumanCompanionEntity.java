@@ -324,6 +324,9 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
     private int lastExhaustedMeleeTick = -100;
     /** What this companion currently knows about; targeting reads only from here. */
     private final CompanionPerception perception = new CompanionPerception(this);
+    private static final int INVESTIGATION_CUE_TICKS = 200;
+    @Nullable private BlockPos investigationCue;
+    private int investigationCueExpiry;
     // Survival state. Withdrawing is server-side only; the goal owns it.
     private boolean withdrawing;
     private int avengeTicksRemaining;
@@ -492,45 +495,48 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         this.goalSelector.addGoal(2, new FightingWithdrawalGoal(this));
         // Every movement goal below occupies its own priority band, so intent
         // decides which one wins rather than registration order:
-        //   3 squad move order  > 4 guard hold      > 5 follow owner
-        // > 6 chest delivery    > 7-11 jobs         > 12 patrol return
-        // > 13 patrol stroll    > 14+ idle behavior
+        //   3 squad move order  > 4 investigate     > 5 guard hold
+        // > 6 follow owner      > 7 chest delivery  > 8-12 jobs
+        // > 13 patrol return    > 14 patrol stroll  > 15+ idle behavior
         // A squad told to go somewhere outranks any standing posture.
         this.goalSelector.addGoal(3, new SquadMoveToGoal(this));
-        this.goalSelector.addGoal(4, new MoveBackToGuardGoal(this));
-        this.goalSelector.addGoal(5, new CustomFollowOwnerGoal(this, followSpeed(), true));
-        this.goalSelector.addGoal(6, new DeliverToChestGoal(this, 1.1D));
+        // Going to look at a reported disturbance outranks standing at a post,
+        // since the whole point of a post is noticing things.
+        this.goalSelector.addGoal(4, new InvestigateGoal(this));
+        this.goalSelector.addGoal(5, new MoveBackToGuardGoal(this));
+        this.goalSelector.addGoal(6, new CustomFollowOwnerGoal(this, followSpeed(), true));
+        this.goalSelector.addGoal(7, new DeliverToChestGoal(this, 1.1D));
         if (ModConfig.safeGet(ModConfig.JOB_LUMBERJACK_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_LUMBERJACK_RADIUS);
             this.lumberjackGoal = new LumberjackJobGoal(this, radius, true);
-            this.goalSelector.addGoal(7, lumberjackGoal);
+            this.goalSelector.addGoal(8, lumberjackGoal);
         }
         if (ModConfig.safeGet(ModConfig.JOB_MINER_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_MINER_RADIUS);
-            this.goalSelector.addGoal(8, new MinerJobGoal(this, radius, true));
+            this.goalSelector.addGoal(9, new MinerJobGoal(this, radius, true));
         }
         if (ModConfig.safeGet(ModConfig.JOB_FISHER_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_FISHER_RADIUS);
-            this.goalSelector.addGoal(9, new FisherJobGoal(this, radius, true));
+            this.goalSelector.addGoal(10, new FisherJobGoal(this, radius, true));
         }
         if (ModConfig.safeGet(ModConfig.JOB_CHEF_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_CHEF_RADIUS);
-            this.goalSelector.addGoal(10, new ChefJobGoal(this, radius, true));
+            this.goalSelector.addGoal(11, new ChefJobGoal(this, radius, true));
         }
         if (ModConfig.safeGet(ModConfig.JOB_HUNTER_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_HUNTER_RADIUS);
-            this.goalSelector.addGoal(11, new HunterJobGoal(this, radius, true));
+            this.goalSelector.addGoal(12, new HunterJobGoal(this, radius, true));
         }
         // Registered exactly once; both goals read the live patrol radius so a
         // radius change or reload never needs to re-register them.
         patrolGoal = new PatrolGoal(this, 60);
         moveBackGoal = new MoveBackToPatrolGoal(this);
-        this.goalSelector.addGoal(12, moveBackGoal);
-        this.goalSelector.addGoal(13, patrolGoal);
-        this.goalSelector.addGoal(14, new CustomWaterAvoidingRandomStrollGoal(this, 1.0D));
-        this.goalSelector.addGoal(15, new LookAtPlayerGoal(this, Player.class, 6.0F));
-        this.goalSelector.addGoal(16, new RandomLookAroundGoal(this));
-        this.goalSelector.addGoal(17, new OpenDoorGoal(this, true));
+        this.goalSelector.addGoal(13, moveBackGoal);
+        this.goalSelector.addGoal(14, patrolGoal);
+        this.goalSelector.addGoal(15, new CustomWaterAvoidingRandomStrollGoal(this, 1.0D));
+        this.goalSelector.addGoal(16, new LookAtPlayerGoal(this, Player.class, 6.0F));
+        this.goalSelector.addGoal(17, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(18, new OpenDoorGoal(this, true));
 
         this.targetSelector.addGoal(1, new CustomOwnerHurtByTargetGoal(this));
         this.targetSelector.addGoal(2, new CustomOwnerHurtTargetGoal(this));
@@ -1041,6 +1047,26 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
     /** Server-side sensing. Companions may only act on what this reports. */
     public CompanionPerception perception() {
         return perception;
+    }
+
+    /**
+     * A place worth going to look at, set when something is inside a zone this
+     * companion guards but nobody has actually seen it. Deliberately a position
+     * and not an entity: the companion investigates, and only fights once it
+     * genuinely perceives whatever is there.
+     */
+    public Optional<BlockPos> getInvestigationCue() {
+        return investigationCue == null || this.tickCount > investigationCueExpiry
+                ? Optional.empty() : Optional.of(investigationCue);
+    }
+
+    public void setInvestigationCue(@Nullable BlockPos pos) {
+        this.investigationCue = pos == null ? null : pos.immutable();
+        this.investigationCueExpiry = this.tickCount + INVESTIGATION_CUE_TICKS;
+    }
+
+    public void clearInvestigationCue() {
+        this.investigationCue = null;
     }
 
     /* ---------- Stance ---------- */
