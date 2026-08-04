@@ -322,6 +322,8 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
     private int lastAppliedSwingTick = -1;
     private int combatGraceTicks;
     private int lastExhaustedMeleeTick = -100;
+    /** What this companion currently knows about; targeting reads only from here. */
+    private final CompanionPerception perception = new CompanionPerception(this);
     // Survival state. Withdrawing is server-side only; the goal owns it.
     private boolean withdrawing;
     private int avengeTicksRemaining;
@@ -1034,6 +1036,11 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
             return new net.minecraft.world.phys.Vec3(0, 0, 1);
         }
         return look.normalize();
+    }
+
+    /** Server-side sensing. Companions may only act on what this reports. */
+    public CompanionPerception perception() {
+        return perception;
     }
 
     /* ---------- Stance ---------- */
@@ -2791,6 +2798,7 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
                 CompanionVoice.play(this, ModSounds.Cue.IDLE);
             }
             checkArmor();
+            perception.tick();
             tickSurvivalState();
             if (this.tickCount % 2 == 0 && isPickupEnabled() && this.isTame()) {
                 collectNearbyItems();

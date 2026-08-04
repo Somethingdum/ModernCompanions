@@ -238,3 +238,13 @@ tasks.named("check") {
     dependsOn tasks.named("perceptionRulesCheck")
     dependsOn tasks.named("fireLineCheck")
 }
+
+tasks.register("threatAssessmentCheck", JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = "com.majorbonghits.moderncompanions.entity.ai.ThreatAssessmentTest"
+    jvmArgs "-ea"
+}
+
+tasks.named("check") {
+    dependsOn tasks.named("threatAssessmentCheck")
+}

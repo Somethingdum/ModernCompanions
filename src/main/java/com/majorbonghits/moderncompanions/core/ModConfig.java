@@ -73,6 +73,7 @@ public final class ModConfig {
     public static ModConfigSpec.DoubleValue COMBAT_FIRE_LANE_CLEARANCE;
     public static ModConfigSpec.IntValue PERCEPTION_SIGHT_RANGE;
     public static ModConfigSpec.IntValue PERCEPTION_MEMORY_TICKS;
+    public static ModConfigSpec.IntValue PERCEPTION_SWEEP_INTERVAL;
     public static ModConfigSpec.IntValue ZONE_DEPTH_BELOW;
     public static ModConfigSpec.IntValue ZONE_HEIGHT_ABOVE;
     public static ModConfigSpec.BooleanValue STARTER_ENABLED;
@@ -359,6 +360,11 @@ public final class ModConfig {
                         "Confidence decays over this window so they search where a target went rather than",
                         "tracking it perfectly through walls.")
                 .defineInRange("memoryTicks", 200, 20, 2400);
+        PERCEPTION_SWEEP_INTERVAL = builder.translation("modern_companions.configuration.combat.sweep_interval")
+                .comment("Ticks between a companion refreshing what it can see. Sweeps are phase-offset per",
+                        "companion, so a large party never all sweeps on the same tick. Lower is more responsive",
+                        "and more expensive.")
+                .defineInRange("perceptionSweepInterval", 10, 1, 40);
         builder.pop();
 
         builder.translation("modern_companions.configuration.starter").push("starter");

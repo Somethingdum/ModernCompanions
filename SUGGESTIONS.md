@@ -505,3 +505,12 @@
 - The single highest-value remaining piece of work is wiring `PerceptionRules` into `AlertGoal` and `HuntGoal`. All the rules are written and tested but targeting still uses vanilla nearest-valid selection, so companions do not yet actually lose track of things or fail to notice a sneaking player.
 - Second highest is the squad HUD. The baton and commands cover every verb, but squad state is currently invisible without running `/squad list`.
 - Before release, run the full situation matrix in section 21 of the plan in a dev world and record the results, since almost none of this has been observed in-world yet.
+
+## 2026-08-04 (perception-driven targeting and threat priority)
+
+- Verify the anti-omniscience claim directly: sneak up on an alert companion from behind and confirm it does not acquire you, then stand in plain sight and confirm it does. Repeat in darkness and in a thunderstorm.
+- Confirm memory decay behaves: let a companion chase a mob around a corner and check it heads for where the mob was going, then gives up, rather than tracking perfectly or forgetting instantly.
+- `HuntGoal` still uses vanilla nearest-target selection. It is manual hunting of passive animals so the stakes are low, but it should be moved onto the contact list for consistency.
+- The zone-intrusion term in `ThreatAssessment` is wired to a constant false at both call sites because perception does not know about zones yet. Connect it when the breach ledger lands, otherwise guards will not actually prioritise intruders over ambient mobs.
+- Profile the sweep with eight companions and a few hundred mobs. Sweeps are phase-offset and bounded, but `bestTarget` and `scoreOf` each run a squadmate query, and those could be hoisted to once per sweep rather than once per call.
+- The reaction delay is applied on acquisition only. Consider also applying it after losing and regaining a target, so repeated flickering in and out of cover is not instantly punished.

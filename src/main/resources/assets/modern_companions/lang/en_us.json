@@ -844,5 +844,6 @@
   "modern_companions.configuration.starter": "Starter Companion",
   "modern_companions.configuration.starter.enabled": "Grant Starter Companion",
   "modern_companions.configuration.starter.gear": "Starter Gear",
-  "modern_companions.configuration.starter.grant_tools": "Grant Squad Tools"
+  "modern_companions.configuration.starter.grant_tools": "Grant Squad Tools",
+  "modern_companions.configuration.combat.sweep_interval": "Perception Sweep Interval"
 }
