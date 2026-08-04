@@ -75,6 +75,9 @@ public final class ModConfig {
     public static ModConfigSpec.IntValue PERCEPTION_MEMORY_TICKS;
     public static ModConfigSpec.IntValue ZONE_DEPTH_BELOW;
     public static ModConfigSpec.IntValue ZONE_HEIGHT_ABOVE;
+    public static ModConfigSpec.BooleanValue STARTER_ENABLED;
+    public static ModConfigSpec.EnumValue<StarterCompanionGear> STARTER_GEAR;
+    public static ModConfigSpec.BooleanValue STARTER_GRANT_TOOLS;
     public static ModConfigSpec.BooleanValue TRAITS_ENABLED;
     public static ModConfigSpec.IntValue SECONDARY_TRAIT_CHANCE;
     public static ModConfigSpec.BooleanValue BOND_ENABLED;
@@ -356,6 +359,20 @@ public final class ModConfig {
                         "Confidence decays over this window so they search where a target went rather than",
                         "tracking it perfectly through walls.")
                 .defineInRange("memoryTicks", 200, 20, 2400);
+        builder.pop();
+
+        builder.translation("modern_companions.configuration.starter").push("starter");
+        STARTER_ENABLED = builder.translation("modern_companions.configuration.starter.enabled")
+                .comment("Grant one fully equipped companion the first time a player joins the world.")
+                .define("enabled", true);
+        STARTER_GEAR = builder.translation("modern_companions.configuration.starter.gear")
+                .comment("Equipment the starter companion arrives with. IRON gives full iron armour, an iron sword,",
+                        "and a shield, bypassing the usual spawn roll that produces nothing about 40% of the time.")
+                .defineEnum("gear", StarterCompanionGear.IRON);
+        STARTER_GRANT_TOOLS = builder.translation("modern_companions.configuration.starter.grant_tools")
+                .comment("Also give the Command Baton and Perimeter Rod, so squads and base perimeters are usable",
+                        "immediately rather than needing to be crafted first.")
+                .define("grantTools", true);
         builder.pop();
 
         builder.translation("modern_companions.configuration.zones").push("zones");

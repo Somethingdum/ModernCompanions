@@ -59,6 +59,50 @@
     * Companions with Jobs will only work when on patrol
     * Companions will switch to their desired tool when set to patrol, and back to their weapons when taken off patrol.
 
+## v3.49 - v3.57 (Companion AI Overhaul)
+
+### Recruitment
+* The taming system is gone. Interacting with an unowned companion recruits them outright.
+    * `recruitment.mode` can be set to HANDSHAKE if you would rather sneak to recruit, so you can talk to structure residents without taking them along.
+* New players are given one fully equipped Vanguard on first join, with full iron armour, an iron sword and a shield, plus the Command Baton and Perimeter Rod.
+    * Use `/companion starter` to claim it in a world that already existed.
+
+### Squads
+* Companions can be split into up to eight squads and ordered as units.
+* New item: **Command Baton**
+    * Right-click ground to send the active squad there. They walk the whole way.
+    * Sneak + right-click ground to post them guarding that spot.
+    * Right-click a companion to add them to the active squad, sneak to remove.
+    * Right-click air to switch squads, sneak + right-click air to cycle their standing order.
+* New commands: `/squad` (alias `/sq`) with list, add, clear, name, follow, hold, work, moveto, ward, allfollow and allhold.
+
+### Perimeter defence
+* New item: **Perimeter Rod**
+    * Click two corners to define your base boundary.
+    * Zones extend below and above the marked corners so tunnelling under or flying over is still covered.
+    * Right-click a companion to post their whole squad, spread around the perimeter rather than clumped on one corner.
+
+### Pathfinding
+* Companions can now path 64 blocks instead of 20, with triple the node budget. This is what lets them walk long distances instead of teleporting.
+* Teleporting is now a last resort: only when far away, genuinely unable to find a route, out of combat, off cooldown, and outside your view. Set `navigation.teleportPolicy` to NEVER to disable it entirely.
+* Companions that fall behind sprint to catch up rather than blinking to you.
+* They step up full blocks instead of stalling, route around lava, fire, magma, campfires, cactus and berry bushes, and prefer shores and bridges over swimming in armour.
+
+### Combat
+* **Companions now fight creepers.** They close in, strike, step out of the blast while the fuse burns, then re-engage. A creeper about to reach you gets body-blocked.
+* **Ranged companions no longer shoot through you.** Archers, arbalists, mages and firearm users hold fire when you or an ally are in the shot line.
+* Wounded companions break off to heal and return, but never while you are fighting nearby, never from a creeper, never when cornered, and never after you go down. When they do break off they back away facing the enemy rather than turning and running.
+* Once per fight, a companion below 15% health that is withdrawing takes reduced damage so breaking off is survivable.
+
+### Fixes
+* Patrol goals were being registered up to three times per companion, with stale radii.
+* Guard, follow and patrol shared one priority band, so which one won depended on registration order rather than what you asked for.
+* Every Vanguard was running two melee goals, one inherited from Knight.
+* A server-wide handler was constructing an exception for every mob in the world on every tick.
+* Enemy callouts were scanning every entity in the loaded level.
+* Companions could retaliate against their owner after an accidental hit.
+* Weapons placed directly into a companion's hand slot could be lost on reload.
+
 
 
 

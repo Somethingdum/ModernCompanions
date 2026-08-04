@@ -1,9 +1,49 @@
 # Modern Companions — Total Overhaul Implementation Plan
 
 **Target:** Minecraft 1.21.1 Java · NeoForge `21.1.219` · Java 21 · Parchment `2024.11.17`
-**Audience:** the implementing agent (Fable 5). This document is a build spec, not a pitch.
+**Audience:** the implementing agent. This document is a build spec, not a pitch.
 **Scope:** single-player / personal server. Balance is tuned for one player's experience.
 **Supersedes:** the previous revision of this file.
+
+---
+
+## Implementation status (v3.57)
+
+Eight of the twelve phases are implemented and committed. What is **done**:
+
+| Phase | Status | Version |
+|---|---|---|
+| 0 · Defect repairs | **Done** — 15 of the 30 register items fixed | 3.49 |
+| 1 · Navigation core | **Done** — own search range, node budget, hazards, step height | 3.50 |
+| 2 · Long-range routing | **Partial** — staged bearing-walk, no coarse corridor planner yet | 3.50 |
+| 3 · Taming removal + starter | **Done** | 3.51 / 3.57 |
+| 4 · Stances + squads | **Done** — stance derives over legacy booleans (see deviation below) | 3.52 |
+| 5 · Command layer | **Partial** — baton and `/squad` done; no HUD, control groups, or radial | 3.52 |
+| 6 · Perception + blackboard | **Partial** — rules written and tested, not yet wired into targeting | 3.54 |
+| 7 · Threat + focus fire | **Not started** | — |
+| 8 · Combat tactics, creepers, survival | **Done** for creepers and survival; broader tactics not started | 3.53 / 3.55 |
+| 9 · Zones + ward behaviour | **Partial** — zones, rod, sentry distribution done; no breach ledger | 3.56 |
+| 10 · Ambition pass | **Not started** | — |
+| 11 · Tuning + profiling | **Not started** | — |
+
+**Deviations from this spec, and why:**
+
+1. **§4.1 stance model.** The spec proposed making `CompanionStance` authoritative with
+   the legacy booleans as derived shims. It was built the other way round: the booleans
+   remain storage and the enum is the derived view, with `setStance` as the sole mutator.
+   The booleans are read by every job goal, both HUD integrations, and all movement goals;
+   the actual defect was that scattered setters could produce contradictory combinations,
+   which one mutator fixes without touching a single reader.
+2. **§12.1 food fields.** The spec said to keep `FOOD1`/`FOOD2` alive because Jade and
+   WTHIT read them. They do not — checked before deleting. All four synced fields were
+   removed outright rather than preserved as dead weight.
+3. **§5.1 `createPath` override.** The spec proposed overriding `PathNavigation#createPath`
+   to substitute a private navigation range. That requires reimplementing a method that
+   touches several protected fields. Raising `FOLLOW_RANGE` and capping targeting
+   separately via `getFollowDistance` achieves the same split with far less breakage risk.
+
+**Known gaps** are tracked as entries in `SUGGESTIONS.md`; the largest are the squad HUD,
+wiring `PerceptionRules` into target acquisition, and the zone breach ledger.
 
 ---
 

@@ -496,3 +496,12 @@
 - Watch for an archer that holds fire indefinitely because an ally is parked in the lane. If that happens in practice, add a sidestep so the shooter repositions instead of waiting.
 - `CompanionFireDiscipline.canFireAt` runs an entity query per shot. It is bounded to the shot's bounding box, but if a large party shows up in profiling, cache the friendly list per tick rather than per shot.
 - Consider whether Alchemist splash potions and any area-of-effect spell should use a radius check rather than the line check; the current gate only covers direct-line projectiles.
+
+## 2026-08-04 (starter companion and overhaul documentation)
+
+- Test the starter grant in a cramped spawn, such as inside a cave or on a one-block platform, and confirm the spawn search either finds standing room or falls back to the player's own position without dropping the companion into a wall.
+- Confirm the starter's iron gear survives contact with the auto-equip logic. It is set through `setManualEquipment` so the slots are locked, but that interaction is worth seeing directly.
+- Run `/companion starter` on a world that already has companions and confirm it grants exactly once, and that `force` is operator-only.
+- The single highest-value remaining piece of work is wiring `PerceptionRules` into `AlertGoal` and `HuntGoal`. All the rules are written and tested but targeting still uses vanilla nearest-valid selection, so companions do not yet actually lose track of things or fail to notice a sneaking player.
+- Second highest is the squad HUD. The baton and commands cover every verb, but squad state is currently invisible without running `/squad list`.
+- Before release, run the full situation matrix in section 21 of the plan in a dev world and record the results, since almost none of this has been observed in-world yet.

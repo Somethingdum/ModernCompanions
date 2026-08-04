@@ -38,6 +38,32 @@ public final class SquadCommands {
         event.getDispatcher().register(root("squad"));
         // Short alias; typing this mid-fight matters more than it looks.
         event.getDispatcher().register(root("sq"));
+        event.getDispatcher().register(starterRoot());
+    }
+
+    /**
+     * Claiming the starter companion in a world that already existed before this
+     * feature. Self-service and once only, with an operator-gated force variant
+     * for testing and for genuinely losing the first companion.
+     */
+    private static LiteralArgumentBuilder<CommandSourceStack> starterRoot() {
+        return Commands.literal("companion")
+                .requires(src -> src.getEntity() instanceof ServerPlayer)
+                .then(Commands.literal("starter")
+                        .executes(ctx -> starter(ctx.getSource(), false))
+                        .then(Commands.literal("force")
+                                .requires(src -> src.hasPermission(2))
+                                .executes(ctx -> starter(ctx.getSource(), true))));
+    }
+
+    private static int starter(CommandSourceStack source, boolean force) {
+        ServerPlayer player = player(source);
+        if (!force && com.majorbonghits.moderncompanions.entity.StarterCompanionEvents.hasBeenGranted(player)) {
+            source.sendFailure(Component.translatable("message.modern_companions.starter.already"));
+            return 0;
+        }
+        com.majorbonghits.moderncompanions.entity.StarterCompanionEvents.markGranted(player);
+        return com.majorbonghits.moderncompanions.entity.StarterCompanionEvents.grant(player, true).isPresent() ? 1 : 0;
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> root(String name) {
