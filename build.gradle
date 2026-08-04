@@ -181,3 +181,13 @@ tasks.register("teleportPolicyCheck", JavaExec) {
 tasks.named("check") {
     dependsOn tasks.named("teleportPolicyCheck")
 }
+
+tasks.register("creeperEngagementCheck", JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = "com.majorbonghits.moderncompanions.entity.ai.CreeperEngagementRulesTest"
+    jvmArgs "-ea"
+}
+
+tasks.named("check") {
+    dependsOn tasks.named("creeperEngagementCheck")
+}

@@ -486,7 +486,10 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         this.goalSelector.addGoal(1, new SitWhenOrderedToGoal(this));
         this.goalSelector.addGoal(2, new FirearmAttackGoal(this));
         registerCombatGoals();
-        this.goalSelector.addGoal(2, new AvoidCreeperGoal(this, 1.5D, 1.5D));
+        // Owns creeper positioning only (MOVE flag); the class attack goal keeps
+        // swinging. Sits just above the movement bands so blast spacing and owner
+        // body-blocking win over follow, guard, and patrol.
+        this.goalSelector.addGoal(2, new CreeperTacticsGoal(this));
         // Movement goals live in strictly separated priority bands so intent, not
         // registration order, decides which one wins: guard hold (3) > follow (4)
         // > delivery (5) > jobs (6-10) > patrol return (11) > patrol stroll (12).

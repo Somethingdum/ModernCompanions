@@ -444,3 +444,12 @@
 - Confirm `Attributes.STEP_HEIGHT` at 1.0 does not let companions climb terrain the player cannot; if it looks wrong, 0.6 restores vanilla mob behavior at the cost of the stalling.
 - The water malus is applied once at construction. If armor-aware water costs are wanted later, recompute it when equipment changes rather than making it a constant.
 - Add a coarse waypoint route planner for destinations beyond `searchRange`, as described in the plan. The current change makes 64-block paths work; a several-hundred-block march still needs corridor planning.
+
+## 2026-08-04 (companions fight creepers)
+
+- Verify the migration against a real existing config: confirm `minecraft:creeper` is removed once, that other exclusions survive, that both marker booleans end up true, and that manually re-adding creeper afterwards is not undone on the next load.
+- Smoke-test melee spacing specifically. A Knight should approach, strike, back off while the fuse burns, and close again when it stops, rather than either trading into the explosion or running away and never returning.
+- Test the body-block path by standing still and letting a creeper reach you with a companion nearby; the companion should move between you and the creeper rather than retreating.
+- Test a charged creeper separately, since the wider blast changes both the back-off distance and the body-block trigger radius.
+- Watch for goal contention between `CreeperTacticsGoal` at priority 2 and the class attack goal also at priority 2. Both are needed simultaneously and only the tactics goal claims MOVE, but confirm in-world that attacking continues while spacing.
+- Consider giving ranged classes an explicit threat bonus for creepers once the threat model lands, so an Archer prioritises the creeper over a nearer zombie.

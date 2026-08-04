@@ -63,6 +63,8 @@ public final class ModConfig {
     public static ModConfigSpec.ConfigValue<List<? extends String>> HUNT_MOBS;
     public static ModConfigSpec.ConfigValue<List<? extends String>> ALERT_EXCLUDED_MOBS;
     private static ModConfigSpec.BooleanValue ALERT_CREEPER_DEFAULT_MIGRATED;
+    private static ModConfigSpec.BooleanValue ALERT_CREEPER_REMOVAL_MIGRATED;
+    public static ModConfigSpec.EnumValue<CompanionCreeperPolicy> CREEPER_POLICY;
     public static ModConfigSpec.BooleanValue TRAITS_ENABLED;
     public static ModConfigSpec.IntValue SECONDARY_TRAIT_CHANCE;
     public static ModConfigSpec.BooleanValue BOND_ENABLED;
@@ -164,7 +166,8 @@ public final class ModConfig {
                 .comment("Stamina spent after a successful melee attack; 0 disables melee drain")
                 .defineInRange("meleeStaminaCost", 8, 0, 100);
         CREEPER_WARNING = builder.translation("modern_companions.configuration.companion.creeper_warning")
-                .comment("If true, companions warn the player and avoid nearby creepers")
+                .comment("If true, companions call out creepers they spot. Whether they fight them is",
+                        "controlled by alert.creeperPolicy; this only governs the voice line.")
                 .define("creeperWarning", true);
         COMPANION_VOICE_MODE = builder.translation("modern_companions.configuration.companion.voice_mode")
                 .comment("Full plays all companion voice lines; Limited keeps pain, death, and ambient noises; Off disables custom companion sounds.")
@@ -205,6 +208,15 @@ public final class ModConfig {
         // Hidden migration marker: distinguishes old empty configs from a player's intentional removal.
         ALERT_CREEPER_DEFAULT_MIGRATED = builder.comment("Internal migration marker for the Creeper Alert default.")
                 .define("creeperDefaultMigrated", false);
+        // Second marker: undoes the injected creeper exclusion exactly once so companions
+        // fight creepers, without overriding a player who deliberately re-adds it later.
+        ALERT_CREEPER_REMOVAL_MIGRATED = builder.comment("Internal migration marker for removing the old Creeper Alert exclusion.")
+                .define("creeperExclusionRemovedMigrated", false);
+        CREEPER_POLICY = builder.translation("modern_companions.configuration.alert.creeper_policy")
+                .comment("ENGAGE: companions kill creepers, stepping out of blast range while the fuse burns.",
+                        "RANGED_ONLY: only companions holding a ranged weapon engage; melee keeps its distance.",
+                        "AVOID: original behavior, companions flee from creepers and never target them.")
+                .defineEnum("creeperPolicy", CompanionCreeperPolicy.ENGAGE);
         builder.pop();
 
         builder.translation("modern_companions.configuration.personality").push("personality");
@@ -345,12 +357,19 @@ public final class ModConfig {
     // inside ModConfigEvent.Loading re-enters the config file watcher.
     private static boolean pendingMigrationSave;
 
-    /** Upgrades pre-Creeper-default configs once without overwriting later player choices. */
+    /**
+     * Removes the creeper exclusion this mod previously injected, so companions
+     * will fight creepers. Runs exactly once, guarded by its own marker, so a
+     * player who deliberately re-adds creepers afterwards keeps that choice.
+     */
     public static void migrateAlertExclusions(ModConfigEvent.Loading event) {
-        if (event.getConfig().getSpec() != COMMON_SPEC || safeGet(ALERT_CREEPER_DEFAULT_MIGRATED)) return;
+        if (event.getConfig().getSpec() != COMMON_SPEC) return;
+        if (safeGet(ALERT_CREEPER_REMOVAL_MIGRATED)) return;
 
-        ALERT_EXCLUDED_MOBS.set(AlertExclusionDefaults.withDefaultCreeper(safeGet(ALERT_EXCLUDED_MOBS)));
+        ALERT_EXCLUDED_MOBS.set(AlertExclusionDefaults.withoutInjectedCreeper(safeGet(ALERT_EXCLUDED_MOBS)));
+        // Both markers are set so the older injection migration can never run again.
         ALERT_CREEPER_DEFAULT_MIGRATED.set(true);
+        ALERT_CREEPER_REMOVAL_MIGRATED.set(true);
         pendingMigrationSave = true;
     }
 
