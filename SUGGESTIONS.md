@@ -407,3 +407,11 @@
 ## 2026-08-03 (survival weapon enchanting)
 
 - Smoke-test one representative dagger, hammer, club, spear, quarterstaff, and glaive in an enchanting table and anvil with Sharpness, Unbreaking, and Mending; repeat with bronze loaded and absent.
+
+## 2026-08-04 (companion intelligence & perimeter plan)
+
+- Land phase 0 of `PLAN_COMPANION_AI.md` before any new AI work: `readAdditionalSaveData` and `finalizeSpawn` both add fresh `PatrolGoal`/`MoveBackToPatrolGoal` instances without removing the ones `registerGoals` already added, so loaded companions run duplicate patrol goals carrying stale radii.
+- Resolve the priority-3 `Flag.MOVE` collision between `MoveBackToGuardGoal`, `CustomFollowOwnerGoal`, `MoveBackToPatrolGoal`, and `PatrolGoal`; today the winner is goal insertion order rather than player intent.
+- Reproduce and fix the `Ideas.md` archer crash before increasing ranged aggression; inspect `Archer#performRangedAttack` for an empty `getProjectile` result and for entity-tick reentrancy when the arrow is spawned.
+- Prefer live radius reads over the cached `PatrolGoal.radius`/`MoveBackToPatrolGoal.radius` fields so radius changes never require constructing and re-registering goals.
+- Make modded-mob knowledge data-driven from the start: `HuntGoal`'s hardcoded entity list and the planned threat profiles should both resolve through datapack JSON plus tags rather than Java constants.
