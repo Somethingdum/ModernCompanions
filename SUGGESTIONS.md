@@ -470,3 +470,12 @@
 - The three resource-item config lists are now unused but deliberately retained so existing config files still validate. Remove them, and the `pickResource` helper with its test, in a later release once players have loaded the game at least once.
 - Feeding a tamed companion for bond experience still works and is unchanged; confirm it did not regress, since it lived in the same interaction method as the removed taming branch.
 - Consider whether HANDSHAKE should become the default. INSTANT is the requested behaviour, but structure residents are easy to recruit by accident when passing through a village.
+
+## 2026-08-04 (squads, stances, and squad orders)
+
+- The client-side half of the command layer is still missing: there is no squad HUD overlay, no number-key control groups, and no radial menu. The Command Baton and `/squad` cover the same verbs, but the HUD in particular is what makes squad state readable at a glance. Add it as a `RegisterGuiLayersEvent` layer fed by a small server-to-client squad snapshot payload.
+- Smoke-test a genuinely long move order, several hundred blocks across varied terrain, and confirm the squad walks the whole way in stages rather than stalling at the navigator's range limit or teleporting.
+- Verify squad persistence explicitly: assign squads, restart the server, and confirm membership, names, colours, and standing orders all survive, including for members that were unloaded at save time.
+- `SquadService.loadedMembers` iterates every level for every member id. That is fine for a personal server with a handful of squads, but if it ever shows up in profiling, cache an owner-to-companion index instead.
+- Decide whether `MOVE_TO` should clear itself on arrival. It currently persists, so a squad that is knocked away from the destination walks back, which is usually right for a rally point and occasionally surprising after a fight.
+- Consider making the baton's destination marker persist for a few seconds rather than a single particle burst, so the player can see where a squad is headed after issuing the order.

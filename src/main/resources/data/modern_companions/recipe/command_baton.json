@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "  B",
+    " S ",
+    "S  "
+  ],
+  "key": {
+    "B": { "item": "minecraft:brick" },
+    "S": { "item": "minecraft:stick" }
+  },
+  "result": { "id": "modern_companions:command_baton", "count": 1 }
+}

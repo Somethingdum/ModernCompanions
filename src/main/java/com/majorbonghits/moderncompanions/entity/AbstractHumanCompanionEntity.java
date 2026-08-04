@@ -8,6 +8,7 @@ import com.majorbonghits.moderncompanions.core.ModMenuTypes;
 import com.majorbonghits.moderncompanions.entity.ai.*;
 import com.majorbonghits.moderncompanions.entity.personality.CompanionPersonality;
 import com.majorbonghits.moderncompanions.entity.job.CompanionJob;
+import com.majorbonghits.moderncompanions.squad.CompanionStance;
 import com.majorbonghits.moderncompanions.menu.CompanionMenu;
 import com.majorbonghits.moderncompanions.core.ModItems;
 import com.majorbonghits.moderncompanions.core.ModEnchantments;
@@ -160,6 +161,8 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
     private static final EntityDataAccessor<String> DELIVERY_DIMENSION = SynchedEntityData
             .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> FAVORITE_FOOD = SynchedEntityData
+            .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> SQUAD_ID = SynchedEntityData
             .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Float> EXP_PROGRESS = SynchedEntityData
             .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.FLOAT);
@@ -412,6 +415,7 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         minerOreMemory.clear();
         minerOreIndex = 0;
         builder.define(FAVORITE_FOOD, "");
+        builder.define(SQUAD_ID, "");
         builder.define(EXP_PROGRESS, 0.0F);
         builder.define(STR, 4);
         builder.define(DEX, 4);
@@ -481,46 +485,50 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         // swinging. Sits just above the movement bands so blast spacing and owner
         // body-blocking win over follow, guard, and patrol.
         this.goalSelector.addGoal(2, new CreeperTacticsGoal(this));
-        // Movement goals live in strictly separated priority bands so intent, not
-        // registration order, decides which one wins: guard hold (3) > follow (4)
-        // > delivery (5) > jobs (6-10) > patrol return (11) > patrol stroll (12).
         // Breaking off outranks every ordinary movement order but yields to creeper
         // spacing, which is itself a survival behavior.
         this.goalSelector.addGoal(2, new FightingWithdrawalGoal(this));
-        this.goalSelector.addGoal(3, new MoveBackToGuardGoal(this));
-        this.goalSelector.addGoal(4, new CustomFollowOwnerGoal(this, followSpeed(), true));
-        this.goalSelector.addGoal(5, new DeliverToChestGoal(this, 1.1D));
+        // Every movement goal below occupies its own priority band, so intent
+        // decides which one wins rather than registration order:
+        //   3 squad move order  > 4 guard hold      > 5 follow owner
+        // > 6 chest delivery    > 7-11 jobs         > 12 patrol return
+        // > 13 patrol stroll    > 14+ idle behavior
+        // A squad told to go somewhere outranks any standing posture.
+        this.goalSelector.addGoal(3, new SquadMoveToGoal(this));
+        this.goalSelector.addGoal(4, new MoveBackToGuardGoal(this));
+        this.goalSelector.addGoal(5, new CustomFollowOwnerGoal(this, followSpeed(), true));
+        this.goalSelector.addGoal(6, new DeliverToChestGoal(this, 1.1D));
         if (ModConfig.safeGet(ModConfig.JOB_LUMBERJACK_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_LUMBERJACK_RADIUS);
             this.lumberjackGoal = new LumberjackJobGoal(this, radius, true);
-            this.goalSelector.addGoal(6, lumberjackGoal);
+            this.goalSelector.addGoal(7, lumberjackGoal);
         }
         if (ModConfig.safeGet(ModConfig.JOB_MINER_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_MINER_RADIUS);
-            this.goalSelector.addGoal(7, new MinerJobGoal(this, radius, true));
+            this.goalSelector.addGoal(8, new MinerJobGoal(this, radius, true));
         }
         if (ModConfig.safeGet(ModConfig.JOB_FISHER_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_FISHER_RADIUS);
-            this.goalSelector.addGoal(8, new FisherJobGoal(this, radius, true));
+            this.goalSelector.addGoal(9, new FisherJobGoal(this, radius, true));
         }
         if (ModConfig.safeGet(ModConfig.JOB_CHEF_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_CHEF_RADIUS);
-            this.goalSelector.addGoal(9, new ChefJobGoal(this, radius, true));
+            this.goalSelector.addGoal(10, new ChefJobGoal(this, radius, true));
         }
         if (ModConfig.safeGet(ModConfig.JOB_HUNTER_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_HUNTER_RADIUS);
-            this.goalSelector.addGoal(10, new HunterJobGoal(this, radius, true));
+            this.goalSelector.addGoal(11, new HunterJobGoal(this, radius, true));
         }
         // Registered exactly once; both goals read the live patrol radius so a
         // radius change or reload never needs to re-register them.
         patrolGoal = new PatrolGoal(this, 60);
         moveBackGoal = new MoveBackToPatrolGoal(this);
-        this.goalSelector.addGoal(11, moveBackGoal);
-        this.goalSelector.addGoal(12, patrolGoal);
-        this.goalSelector.addGoal(13, new CustomWaterAvoidingRandomStrollGoal(this, 1.0D));
-        this.goalSelector.addGoal(14, new LookAtPlayerGoal(this, Player.class, 6.0F));
-        this.goalSelector.addGoal(15, new RandomLookAroundGoal(this));
-        this.goalSelector.addGoal(16, new OpenDoorGoal(this, true));
+        this.goalSelector.addGoal(12, moveBackGoal);
+        this.goalSelector.addGoal(13, patrolGoal);
+        this.goalSelector.addGoal(14, new CustomWaterAvoidingRandomStrollGoal(this, 1.0D));
+        this.goalSelector.addGoal(15, new LookAtPlayerGoal(this, Player.class, 6.0F));
+        this.goalSelector.addGoal(16, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(17, new OpenDoorGoal(this, true));
 
         this.targetSelector.addGoal(1, new CustomOwnerHurtByTargetGoal(this));
         this.targetSelector.addGoal(2, new CustomOwnerHurtTargetGoal(this));
@@ -1026,6 +1034,51 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
             return new net.minecraft.world.phys.Vec3(0, 0, 1);
         }
         return look.normalize();
+    }
+
+    /* ---------- Stance ---------- */
+
+    /**
+     * Current posture, derived from the follow/patrol/guard booleans that every
+     * goal and HUD provider already reads.
+     */
+    public CompanionStance getStance() {
+        return CompanionStance.derive(isFollowing(), isPatrolling(), isGuarding());
+    }
+
+    /**
+     * The single consistent way to change posture. Setting the three legacy
+     * booleans individually is what allowed contradictory states such as
+     * following-and-guarding; routing every change through here makes that
+     * unrepresentable. Anchored stances record the current position as their post.
+     */
+    public void setStance(CompanionStance stance) {
+        CompanionStance target = stance == null ? CompanionStance.ESCORT : stance;
+        if (target != CompanionStance.PATROL && getJob().isWorker() && isWorkEnabled()) {
+            // A player-issued posture overrides an active job rather than fighting it.
+            setWorkEnabled(false);
+        }
+        if (target.needsAnchor()) {
+            setPatrolPos(blockPosition());
+        }
+        setFollowing(target.following());
+        setPatrolling(target.patrolling());
+        setGuarding(target.guarding());
+    }
+
+    /** Squad membership cache; {@code CompanionSquadData} remains authoritative. */
+    public Optional<UUID> getSquadId() {
+        String raw = this.entityData.get(SQUAD_ID);
+        if (raw == null || raw.isBlank()) return Optional.empty();
+        try {
+            return Optional.of(UUID.fromString(raw));
+        } catch (IllegalArgumentException ex) {
+            return Optional.empty();
+        }
+    }
+
+    public void setSquadId(@Nullable UUID squadId) {
+        this.entityData.set(SQUAD_ID, squadId == null ? "" : squadId.toString());
     }
 
     /* ---------- Survival state ---------- */
@@ -2434,6 +2487,7 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         tag.putInt("XpTotal", this.totalExperience);
         tag.putInt("KillCount", this.getKillCount());
         tag.putString("FavoriteFood", entityData.get(FAVORITE_FOOD));
+        getSquadId().ifPresent(squadId -> tag.putUUID("SquadId", squadId));
         tag.putInt("Strength", getBaseStrength());
         tag.putInt("Dexterity", getBaseDexterity());
         tag.putInt("Intelligence", getBaseIntelligence());
@@ -2537,6 +2591,7 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         setKillCount(tag.contains("KillCount") ? tag.getInt("KillCount") : 0);
         syncExpProgress();
         entityData.set(FAVORITE_FOOD, tag.getString("FavoriteFood"));
+        setSquadId(tag.hasUUID("SquadId") ? tag.getUUID("SquadId") : null);
         if (tag.getInt("baseHealth") == 0) {
             this.setBaseHealth(ModConfig.safeGet(ModConfig.BASE_HEALTH));
         } else {
