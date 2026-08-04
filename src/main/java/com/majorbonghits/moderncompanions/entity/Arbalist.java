@@ -30,7 +30,13 @@ public class Arbalist extends AbstractHumanCompanionEntity implements CrossbowAt
 
     public Arbalist(EntityType<? extends TamableAnimal> type, Level level) {
         super(type, level);
-        this.goalSelector.addGoal(3, new ArbalistCrossbowAttackGoal<>(this, 1.0D, 12.0F));
+    }
+
+    @Override
+    protected void registerCombatGoals() {
+        // Priority 2 with every other class weapon goal; the old priority 3 slot
+        // now belongs to the guard-hold movement band.
+        this.goalSelector.addGoal(2, new ArbalistCrossbowAttackGoal<>(this, 1.0D, 12.0F));
     }
 
     @Override
@@ -97,7 +103,7 @@ public class Arbalist extends AbstractHumanCompanionEntity implements CrossbowAt
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+        clearLoadedMainHandDuplicate();
         checkCrossbow();
     }
 

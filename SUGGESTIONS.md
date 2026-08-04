@@ -426,3 +426,12 @@
 - Reproduce the `Ideas.md` archer crash with assertions enabled before increasing archer aggression, and record the stack trace in `TRACELOG.md`. The plan lists four ranked hypotheses; do not fix speculatively.
 - Register subclass combat goals through an overridable hook called from `registerGoals` rather than from subclass constructors, so `Vanguard` stops inheriting `Knight`'s melee goal in addition to its own.
 - Schedule the `TASK.md` jobs revamp after phases 0 through 2 of this plan; the navigation work removes a large share of the travel and stall problems that audit describes.
+
+## 2026-08-04 (phase 0: AI defect repairs)
+
+- Smoke-test goal counts directly: spawn one companion of each class, dump `goalSelector.getAvailableGoals()`, and confirm exactly one patrol, one patrol-return, and one class weapon goal per entity, including after a save and reload and after changing the radius in the GUI.
+- Confirm Vanguard now carries a single `MeleeAttackGoal` at speed 0.95 rather than Knight's 1.0 goal plus its own.
+- Profile the summon-target handler before and after with roughly 200 loaded mobs; the previous implementation allocated a `NoSuchMethodException` per mob per tick and should no longer appear in an allocation profile.
+- Verify the D-25 repro explicitly: place a uniquely named enchanted sword directly into a companion's main-hand equipment slot with no copy in cargo, save, reload, and confirm the sword survives. Then repeat with the sword also present in cargo and confirm exactly one copy remains.
+- Watch for guard and patrol boundary behavior specifically: companions should settle rather than oscillate at the radius edge, and the navigator should be issued at most one path per ten ticks while returning.
+- Epic Fight interaction needs a live check now that class weapon goals register during base-class construction rather than in subclass constructors; confirm `CompanionEpicFightPatch.selectGoalToRemove` still finds and replaces them.

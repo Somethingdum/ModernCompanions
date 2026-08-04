@@ -56,27 +56,31 @@ public final class CompanionVoice {
                 0.95F + companion.getRandom().nextFloat() * 0.1F);
     }
 
-    /** Lets the closest owned, loaded companion announce a shared enemy target. */
+    /**
+     * Lets the closest owned companion near the owner announce a shared enemy
+     * target. Companions beyond earshot cannot be the speaker anyway, so a
+     * bounded AABB query around the owner replaces the old full loaded-level
+     * entity scan that ran on every callout.
+     */
+    private static final double CALLOUT_SCAN_RADIUS = 48.0D;
+
     public static void playEnemySpotted(AbstractHumanCompanionEntity companion, LivingEntity target) {
         var ownerId = companion.getOwnerUUID();
-        if (ownerId != null && companion.level() instanceof ServerLevel serverLevel) {
-            // ponytail: full loaded-level scan keeps "present" exact; use an owner registry if this becomes frequent.
+        LivingEntity owner = companion.getOwner();
+        if (ownerId != null && owner != null && companion.level() instanceof ServerLevel serverLevel) {
             AbstractHumanCompanionEntity closest = null;
             double closestDistance = Double.MAX_VALUE;
-            for (var entity : serverLevel.getEntities().getAll()) {
-                if (entity instanceof AbstractHumanCompanionEntity other
-                        && other.isAlive()
-                        && other.isTame()
-                        && ownerId.equals(other.getOwnerUUID())) {
-                    if (other != companion && other.getTarget() == target) return;
-                    if (companion.getOwner() != null) {
-                        double distance = companion.getOwner().distanceToSqr(other);
-                        if (closest == null || distance < closestDistance
-                                || (distance == closestDistance && other.getId() < closest.getId())) {
-                            closest = other;
-                            closestDistance = distance;
-                        }
-                    }
+            var box = owner.getBoundingBox().inflate(CALLOUT_SCAN_RADIUS);
+            for (AbstractHumanCompanionEntity other : serverLevel.getEntitiesOfClass(
+                    AbstractHumanCompanionEntity.class, box,
+                    o -> o.isAlive() && o.isTame() && ownerId.equals(o.getOwnerUUID()))) {
+                // Another squadmate already fighting this enemy means the callout was made.
+                if (other != companion && other.getTarget() == target) return;
+                double distance = owner.distanceToSqr(other);
+                if (closest == null || distance < closestDistance
+                        || (distance == closestDistance && other.getId() < closest.getId())) {
+                    closest = other;
+                    closestDistance = distance;
                 }
             }
             if (closest != null) {

@@ -14,22 +14,20 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.phys.AABB;
 
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 
 /**
- * Custom revenge goal that avoids intra-owner friendly fire.
+ * Custom revenge goal that avoids intra-owner friendly fire and never turns a
+ * companion against its own owner (an accidental owner hit is not a reason to
+ * fight back). The old ignore-class arrays were always empty and are removed.
  */
 public class CustomHurtByTargetGoal extends TargetGoal {
     private static final TargetingConditions HURT_BY_TARGETING = TargetingConditions.forCombat().ignoreLineOfSight().ignoreInvisibilityTesting();
     private static final int ALERT_RANGE_Y = 10;
     private int timestamp;
-    private final Class<?>[] toIgnoreDamage;
-    private Class<?>[] toIgnoreAlert;
 
-    public CustomHurtByTargetGoal(PathfinderMob mob, Class<?>... toIgnoreDamage) {
+    public CustomHurtByTargetGoal(PathfinderMob mob) {
         super(mob, true);
-        this.toIgnoreDamage = toIgnoreDamage;
         this.setFlags(EnumSet.of(Goal.Flag.TARGET));
     }
 
@@ -41,13 +39,12 @@ public class CustomHurtByTargetGoal extends TargetGoal {
             if (attacker.getType() == EntityType.PLAYER && this.mob.level().getGameRules().getBoolean(GameRules.RULE_UNIVERSAL_ANGER)) {
                 return false;
             }
-            for (Class<?> clazz : this.toIgnoreDamage) {
-                if (clazz.isAssignableFrom(attacker.getClass())) {
+            if (this.mob instanceof TamableAnimal self) {
+                // Never retaliate against the owner, regardless of friendly-fire settings.
+                if (self.getOwner() == attacker) {
                     return false;
                 }
-            }
-            if (attacker instanceof TamableAnimal tamed && this.mob instanceof TamableAnimal selfTame) {
-                if (selfTame.getOwner() == tamed.getOwner()) {
+                if (attacker instanceof TamableAnimal tamed && self.getOwner() == tamed.getOwner()) {
                     return false;
                 }
             }
@@ -70,28 +67,13 @@ public class CustomHurtByTargetGoal extends TargetGoal {
         double range = this.getFollowDistance();
         AABB box = AABB.unitCubeFromLowerCorner(this.mob.position()).inflate(range, ALERT_RANGE_Y, range);
         List<? extends Mob> list = this.mob.level().getEntitiesOfClass(AbstractHumanCompanionEntity.class, box, EntitySelector.NO_SPECTATORS);
-        Iterator<? extends Mob> iterator = list.iterator();
-
-        while (iterator.hasNext()) {
-            Mob mob = iterator.next();
-            if (this.mob != mob && mob.getTarget() == null) {
-                if (this.mob instanceof TamableAnimal tame && mob instanceof TamableAnimal other) {
-                    if (tame.getOwner() != other.getOwner()) {
-                        continue;
-                    }
-                }
-                if (this.toIgnoreAlert != null) {
-                    boolean ignore = false;
-                    for (Class<?> clazz : this.toIgnoreAlert) {
-                        if (mob.getClass() == clazz) {
-                            ignore = true;
-                            break;
-                        }
-                    }
-                    if (ignore) continue;
-                }
-                this.alertOther(mob, this.mob.getLastHurtByMob());
+        for (Mob other : list) {
+            if (this.mob == other || other.getTarget() != null) continue;
+            if (this.mob instanceof TamableAnimal tame && other instanceof TamableAnimal otherTame
+                    && tame.getOwner() != otherTame.getOwner()) {
+                continue;
             }
+            this.alertOther(other, this.mob.getLastHurtByMob());
         }
     }
 

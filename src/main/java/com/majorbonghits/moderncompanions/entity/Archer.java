@@ -26,6 +26,10 @@ public class Archer extends AbstractHumanCompanionEntity implements RangedAttack
 
     public Archer(EntityType<? extends TamableAnimal> type, Level level) {
         super(type, level);
+    }
+
+    @Override
+    protected void registerCombatGoals() {
         this.goalSelector.addGoal(2, new ArcherRangedBowAttackGoal<>(this, 1.0D, 20, 20.0F));
     }
 
@@ -88,7 +92,7 @@ public class Archer extends AbstractHumanCompanionEntity implements RangedAttack
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+        clearLoadedMainHandDuplicate();
         checkBow();
     }
 

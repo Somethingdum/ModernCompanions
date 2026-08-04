@@ -23,6 +23,12 @@ public abstract class AbstractMageCompanion extends AbstractHumanCompanionEntity
 
     protected AbstractMageCompanion(net.minecraft.world.entity.EntityType<? extends TamableAnimal> type, Level level) {
         super(type, level);
+    }
+
+    @Override
+    protected void registerCombatGoals() {
+        // getLightIntervalTicks/getPreferredRange overrides return constants, so
+        // calling them during base-class construction is safe.
         Goal castingGoal = new MageRangedAttackGoal<>(this, 1.05D, getLightIntervalTicks(), getPreferredRange());
         this.goalSelector.addGoal(2, castingGoal);
     }

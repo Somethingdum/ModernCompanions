@@ -48,9 +48,13 @@ public class Vanguard extends Knight {
 
     public Vanguard(EntityType<? extends TamableAnimal> type, Level level) {
         super(type, level);
-        // Keep up on targets while holding shield.
-        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 0.95D, true));
         boostDefenseStats();
+    }
+
+    @Override
+    protected void registerCombatGoals() {
+        // Replaces (not stacks on) Knight's melee goal: shield pace, slightly slower.
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 0.95D, true));
     }
 
     @Override

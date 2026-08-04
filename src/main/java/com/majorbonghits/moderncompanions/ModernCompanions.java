@@ -39,6 +39,7 @@ public final class ModernCompanions {
         ModEntityTypes.ENTITY_TYPES.register(modBus);
         ModMenuTypes.MENU_TYPES.register(modBus);
         modBus.addListener(ModConfig::migrateAlertExclusions);
+        modBus.addListener((net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent e) -> ModConfig.flushPendingMigrationSave());
         modBus.addListener(ModEntityAttributes::registerAttributes);
         modBus.addListener(this::onCommonSetup);
         NeoForge.EVENT_BUS.addListener(CompanionBrewing::register);

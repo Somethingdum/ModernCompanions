@@ -9,24 +9,25 @@ import net.minecraft.world.phys.Vec3;
 import javax.annotation.Nullable;
 
 /**
- * Patrolling random stroll constrained to a patrol radius around the patrol position.
+ * Patrolling random stroll constrained to the companion's live patrol radius.
+ * Radius is read from the entity on every use so radius changes never require
+ * re-registering the goal; the old cached-radius field is what drove duplicate
+ * goal registration on load.
  */
 public class PatrolGoal extends RandomStrollGoal {
     protected final float probability;
     public Vec3 patrolVec;
     public AbstractHumanCompanionEntity companion;
-    public int radius;
 
-    public PatrolGoal(AbstractHumanCompanionEntity mob, int interval, int radius) {
-        this(mob, 1.0D, 0.001F, interval, radius);
+    public PatrolGoal(AbstractHumanCompanionEntity mob, int interval) {
+        this(mob, 1.0D, 0.001F, interval);
     }
 
-    public PatrolGoal(AbstractHumanCompanionEntity mob, double speed, float probability, int interval, int radius) {
+    public PatrolGoal(AbstractHumanCompanionEntity mob, double speed, float probability, int interval) {
         super(mob, speed);
         this.probability = probability;
         this.companion = mob;
         this.interval = interval;
-        this.radius = radius;
     }
 
     @Override
@@ -54,6 +55,6 @@ public class PatrolGoal extends RandomStrollGoal {
 
     private Vec3 getRandomAroundPatrol() {
         if (patrolVec == null) return null;
-        return LandRandomPos.getPosTowards(this.mob, radius, 7, patrolVec);
+        return LandRandomPos.getPosTowards(this.mob, companion.getPatrolRadius(), 7, patrolVec);
     }
 }

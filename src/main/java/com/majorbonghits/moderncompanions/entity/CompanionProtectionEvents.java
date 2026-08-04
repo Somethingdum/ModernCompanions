@@ -16,11 +16,41 @@ import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 import java.lang.reflect.Method;
+import java.util.Optional;
 
 /** Stops companion-caused splash, projectile, fire, and explosion damage that bypasses AI targeting. */
 @EventBusSubscriber(modid = ModernCompanions.MOD_ID)
 public final class CompanionProtectionEvents {
     private static final int COMBAT_ASSIST_MEMORY_TICKS = 200;
+    private static final int IDLE_SUMMON_POLL_TICKS = 40;
+
+    /**
+     * Per-class cache for the optional magic-mod getSummoner accessor. The old
+     * per-call getMethod lookup constructed and threw a NoSuchMethodException
+     * for nearly every mob in the world on every tick; a ClassValue resolves
+     * each class exactly once and caches the miss.
+     */
+    private static final ClassValue<Optional<Method>> SUMMONER_ACCESSOR = new ClassValue<>() {
+        @Override
+        protected Optional<Method> computeValue(Class<?> type) {
+            try {
+                return Optional.of(type.getMethod("getSummoner"));
+            } catch (NoSuchMethodException e) {
+                return Optional.empty();
+            }
+        }
+    };
+
+    // Mod presence never changes after startup; cache it so the per-entity-tick
+    // guard below is a field read instead of a ModList lookup.
+    private static Boolean magicCompatPresent;
+
+    private static boolean magicCompatAvailable() {
+        if (magicCompatPresent == null) {
+            magicCompatPresent = com.majorbonghits.moderncompanions.compat.magic.MagicCastingCompat.available();
+        }
+        return magicCompatPresent;
+    }
 
     private CompanionProtectionEvents() {}
 
@@ -57,11 +87,14 @@ public final class CompanionProtectionEvents {
     /** Revalidate retained upstream targets before their native AI can keep pathing to stale threats. */
     @SubscribeEvent
     public static void enforceSummonTarget(EntityTickEvent.Pre event) {
+        // Summons with a getSummoner accessor only exist through the magic compat mods;
+        // without them this world-wide per-mob handler has nothing to do.
+        if (!magicCompatAvailable()) return;
         if (!(event.getEntity() instanceof Mob summon) || summon.level().isClientSide()) return;
+        if (summon instanceof AbstractHumanCompanionEntity) return; // companions are never summons
 
         LivingEntity target = summon.getTarget();
-        // ponytail: poll idle summon ownership every 20 ticks; add event-driven summon tracking only if scale requires it.
-        if (target == null && summon.tickCount % 20 != 0) return;
+        if (target == null && summon.tickCount % IDLE_SUMMON_POLL_TICKS != 0) return;
         AbstractHumanCompanionEntity companion = summonOwner(summon);
         if (companion == null) return;
 
@@ -153,9 +186,10 @@ public final class CompanionProtectionEvents {
     }
 
     private static Entity summonerOf(Entity entity) {
+        Optional<Method> accessor = SUMMONER_ACCESSOR.get(entity.getClass());
+        if (accessor.isEmpty()) return null;
         try {
-            Method getSummoner = entity.getClass().getMethod("getSummoner");
-            Object owner = getSummoner.invoke(entity);
+            Object owner = accessor.get().invoke(entity);
             return owner instanceof Entity result ? result : null;
         } catch (ReflectiveOperationException ignored) {
             return null;

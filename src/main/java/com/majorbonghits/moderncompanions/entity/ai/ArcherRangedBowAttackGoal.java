@@ -40,7 +40,9 @@ public class ArcherRangedBowAttackGoal<T extends AbstractHumanCompanionEntity & 
 
     @Override
     public boolean canContinueToUse() {
-        return (this.canUse() || !this.mob.getNavigation().isDone()) && this.isHoldingBow();
+        // A dead or cleared target must end the goal even while the navigator drains its path.
+        LivingEntity target = this.mob.getTarget();
+        return target != null && target.isAlive() && this.isHoldingBow();
     }
 
     private boolean isHoldingBow() {

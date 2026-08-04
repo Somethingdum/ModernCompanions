@@ -458,46 +458,61 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         this.goalSelector.addGoal(0, new EatGoal(this));
         this.goalSelector.addGoal(1, new SitWhenOrderedToGoal(this));
         this.goalSelector.addGoal(2, new FirearmAttackGoal(this));
+        registerCombatGoals();
         this.goalSelector.addGoal(2, new AvoidCreeperGoal(this, 1.5D, 1.5D));
+        // Movement goals live in strictly separated priority bands so intent, not
+        // registration order, decides which one wins: guard hold (3) > follow (4)
+        // > delivery (5) > jobs (6-10) > patrol return (11) > patrol stroll (12).
         this.goalSelector.addGoal(3, new MoveBackToGuardGoal(this));
-        this.goalSelector.addGoal(3, new CustomFollowOwnerGoal(this, followSpeed(), true));
-        this.goalSelector.addGoal(4, new DeliverToChestGoal(this, 1.1D));
+        this.goalSelector.addGoal(4, new CustomFollowOwnerGoal(this, followSpeed(), true));
+        this.goalSelector.addGoal(5, new DeliverToChestGoal(this, 1.1D));
         if (ModConfig.safeGet(ModConfig.JOB_LUMBERJACK_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_LUMBERJACK_RADIUS);
             this.lumberjackGoal = new LumberjackJobGoal(this, radius, true);
-            this.goalSelector.addGoal(5, lumberjackGoal);
+            this.goalSelector.addGoal(6, lumberjackGoal);
         }
         if (ModConfig.safeGet(ModConfig.JOB_MINER_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_MINER_RADIUS);
-            this.goalSelector.addGoal(6, new MinerJobGoal(this, radius, true));
+            this.goalSelector.addGoal(7, new MinerJobGoal(this, radius, true));
         }
         if (ModConfig.safeGet(ModConfig.JOB_FISHER_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_FISHER_RADIUS);
-            this.goalSelector.addGoal(7, new FisherJobGoal(this, radius, true));
+            this.goalSelector.addGoal(8, new FisherJobGoal(this, radius, true));
         }
         if (ModConfig.safeGet(ModConfig.JOB_CHEF_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_CHEF_RADIUS);
-            this.goalSelector.addGoal(8, new ChefJobGoal(this, radius, true));
+            this.goalSelector.addGoal(9, new ChefJobGoal(this, radius, true));
         }
         if (ModConfig.safeGet(ModConfig.JOB_HUNTER_ENABLED)) {
             int radius = ModConfig.safeGet(ModConfig.JOB_HUNTER_RADIUS);
-            this.goalSelector.addGoal(9, new HunterJobGoal(this, radius, true));
+            this.goalSelector.addGoal(10, new HunterJobGoal(this, radius, true));
         }
-        this.goalSelector.addGoal(10, new CustomWaterAvoidingRandomStrollGoal(this, 1.0D));
-        this.goalSelector.addGoal(11, new LookAtPlayerGoal(this, Player.class, 6.0F));
-        this.goalSelector.addGoal(12, new RandomLookAroundGoal(this));
-        this.goalSelector.addGoal(13, new OpenDoorGoal(this, true));
-        this.goalSelector.addGoal(14, new LowHealthGoal(this));
-        patrolGoal = new PatrolGoal(this, 60, getPatrolRadius());
-        moveBackGoal = new MoveBackToPatrolGoal(this, getPatrolRadius());
-        this.goalSelector.addGoal(3, moveBackGoal);
-        this.goalSelector.addGoal(3, patrolGoal);
+        // Registered exactly once; both goals read the live patrol radius so a
+        // radius change or reload never needs to re-register them.
+        patrolGoal = new PatrolGoal(this, 60);
+        moveBackGoal = new MoveBackToPatrolGoal(this);
+        this.goalSelector.addGoal(11, moveBackGoal);
+        this.goalSelector.addGoal(12, patrolGoal);
+        this.goalSelector.addGoal(13, new CustomWaterAvoidingRandomStrollGoal(this, 1.0D));
+        this.goalSelector.addGoal(14, new LookAtPlayerGoal(this, Player.class, 6.0F));
+        this.goalSelector.addGoal(15, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(16, new OpenDoorGoal(this, true));
 
         this.targetSelector.addGoal(1, new CustomOwnerHurtByTargetGoal(this));
         this.targetSelector.addGoal(2, new CustomOwnerHurtTargetGoal(this));
         this.targetSelector.addGoal(3, new CustomHurtByTargetGoal(this));
         this.targetSelector.addGoal(4, new HuntGoal(this));
         this.targetSelector.addGoal(5, new AlertGoal(this));
+    }
+
+    /**
+     * Class weapon goals register here at priority 2 instead of in subclass
+     * constructors. Mob's constructor invokes this during base-class
+     * construction, so registration happens exactly once per entity: the old
+     * constructor pattern stacked Knight's melee goal under Vanguard's.
+     * Overrides must not read subclass instance fields.
+     */
+    protected void registerCombatGoals() {
     }
 
     @Override
@@ -1177,12 +1192,8 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
     }
 
     public void setPatrolRadius(int radius) {
-        int clamped = Mth.clamp(radius, 1, 128);
-        this.entityData.set(PATROL_RADIUS, clamped);
-        if (patrolGoal != null)
-            patrolGoal.radius = clamped;
-        if (moveBackGoal != null)
-            moveBackGoal.radius = clamped;
+        // Goals read this synced value live; no goal instances need updating.
+        this.entityData.set(PATROL_RADIUS, Mth.clamp(radius, 1, 128));
     }
 
     public void clearPatrol() {
@@ -1448,6 +1459,21 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
     private boolean isMainHandWeapon(ItemStack stack) {
         return isMainHandEquipment(stack) && !(stack.getItem() instanceof DiggerItem)
                 && !(stack.getItem() instanceof FishingRodItem);
+    }
+
+    /**
+     * Load-time dupe guard. Auto-equipped weapons share one live instance with an
+     * inventory stack, so vanilla persists them twice (HandItems and Inventory) and
+     * a naive reload doubles the item. Drop the hand copy only when an identical
+     * stack exists in cargo and the slot is not manually locked, so gear a player
+     * placed directly into the hand slot survives reload instead of being cleared.
+     */
+    protected void clearLoadedMainHandDuplicate() {
+        if (manuallyEquipped[dedicatedEquipmentIndex(EquipmentSlot.MAINHAND)]) return;
+        ItemStack hand = super.getItemBySlot(EquipmentSlot.MAINHAND);
+        if (!hand.isEmpty() && findInventorySlot(hand) >= 0) {
+            super.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+        }
     }
 
     /** Keeps a valid class weapon equipped instead of swapping it with an older cargo item every tick. */
@@ -2217,10 +2243,6 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
                             setPatrolling(false);
                             setFollowing(true);
                             setPatrolRadius(4);
-                            if (patrolGoal != null)
-                                patrolGoal.radius = 4;
-                            if (moveBackGoal != null)
-                                moveBackGoal.radius = 4;
                         } else if (foodRequirements.get(fedItem) == 0) {
                             CompanionVoice.play(this, ModSounds.Cue.CONFIRMATION);
                             player.sendSystemMessage(Component.translatable("chat.type.text", this.getDisplayName(),
@@ -2664,12 +2686,8 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
             int[] positions = tag.getIntArray("patrol_pos");
             setPatrolPos(new BlockPos(positions[0], positions[1], positions[2]));
         }
-        if (tag.contains("radius")) {
-            patrolGoal = new PatrolGoal(this, 60, tag.getInt("radius"));
-            moveBackGoal = new MoveBackToPatrolGoal(this, tag.getInt("radius"));
-            this.goalSelector.addGoal(3, moveBackGoal);
-            this.goalSelector.addGoal(3, patrolGoal);
-        }
+        // Radius was already applied via setPatrolRadius above; the patrol goals
+        // registered in registerGoals read it live, so no re-registration here.
         checkArmor();
         if (!this.level().isClientSide() && this.level() instanceof ServerLevel serverLevel) {
             refreshDeliveryChunkTicket(serverLevel);
@@ -2815,10 +2833,6 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         setPatrolPos(this.blockPosition());
         setPatrolling(true);
         setPatrolRadius(15);
-        patrolGoal = new PatrolGoal(this, 60, getPatrolRadius());
-        moveBackGoal = new MoveBackToPatrolGoal(this, getPatrolRadius());
-        this.goalSelector.addGoal(3, moveBackGoal);
-        this.goalSelector.addGoal(3, patrolGoal);
         setAgeYears(this.random.nextInt(18, 36)); // 18-35 inclusive
         personality.setLastAgeCheckGameTime(level.getLevel().getGameTime());
         personality.rollTraits(this.random, ModConfig.safeGet(ModConfig.TRAITS_ENABLED),

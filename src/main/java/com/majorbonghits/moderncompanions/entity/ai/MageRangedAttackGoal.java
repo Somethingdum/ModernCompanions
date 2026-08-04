@@ -10,7 +10,9 @@ import java.util.EnumSet;
 /**
  * Ranged casting goal tailored for mage-style companions.
  * Keeps distance, strafes when in range, and lets the caster decide
- * whether to perform a light or heavy spell.
+ * whether to perform a light or heavy spell. Movement resolves to exactly
+ * one navigation decision per tick (back off, approach, or hold) so the
+ * navigator is never given two competing destinations in the same tick.
  */
 public class MageRangedAttackGoal<T extends AbstractMageCompanion> extends Goal {
     private final T caster;
@@ -33,12 +35,13 @@ public class MageRangedAttackGoal<T extends AbstractMageCompanion> extends Goal 
 
     @Override
     public boolean canUse() {
-        return this.caster.getTarget() != null;
+        LivingEntity target = this.caster.getTarget();
+        return target != null && target.isAlive();
     }
 
     @Override
     public boolean canContinueToUse() {
-        return this.canUse() || !this.caster.getNavigation().isDone();
+        return this.canUse();
     }
 
     @Override
@@ -68,14 +71,7 @@ public class MageRangedAttackGoal<T extends AbstractMageCompanion> extends Goal 
         }
         this.seeTime = hasLineOfSight ? this.seeTime + 1 : this.seeTime - 1;
 
-        if (distSqr > (double) this.attackRadiusSqr || this.seeTime < 5) {
-            this.caster.getNavigation().moveTo(target, this.speedModifier);
-        } else {
-            this.caster.getNavigation().stop();
-            ++this.strafeTime;
-        }
-
-        // Back off when too close to keep casting from range
+        // Exactly one movement decision per tick: too close wins, then approach, then hold.
         if (distSqr < (double) (preferredMinRange * preferredMinRange)) {
             double dx = this.caster.getX() - target.getX();
             double dz = this.caster.getZ() - target.getZ();
@@ -83,6 +79,13 @@ public class MageRangedAttackGoal<T extends AbstractMageCompanion> extends Goal 
             double awayX = this.caster.getX() + dx / len * 1.8D;
             double awayZ = this.caster.getZ() + dz / len * 1.8D;
             this.caster.getNavigation().moveTo(awayX, this.caster.getY(), awayZ, this.speedModifier);
+            this.strafeTime = -1;
+        } else if (distSqr > (double) this.attackRadiusSqr || this.seeTime < 5) {
+            this.caster.getNavigation().moveTo(target, this.speedModifier);
+            this.strafeTime = -1;
+        } else {
+            this.caster.getNavigation().stop();
+            ++this.strafeTime;
         }
 
         if (this.strafeTime >= 20) {

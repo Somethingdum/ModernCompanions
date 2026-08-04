@@ -289,13 +289,25 @@ public final class ModConfig {
                 .registerConfig(net.neoforged.fml.config.ModConfig.Type.COMMON, COMMON_SPEC);
     }
 
+    // Migration writes are deferred out of the config-load event: saving from
+    // inside ModConfigEvent.Loading re-enters the config file watcher.
+    private static boolean pendingMigrationSave;
+
     /** Upgrades pre-Creeper-default configs once without overwriting later player choices. */
     public static void migrateAlertExclusions(ModConfigEvent.Loading event) {
         if (event.getConfig().getSpec() != COMMON_SPEC || safeGet(ALERT_CREEPER_DEFAULT_MIGRATED)) return;
 
         ALERT_EXCLUDED_MOBS.set(AlertExclusionDefaults.withDefaultCreeper(safeGet(ALERT_EXCLUDED_MOBS)));
         ALERT_CREEPER_DEFAULT_MIGRATED.set(true);
-        COMMON_SPEC.save();
+        pendingMigrationSave = true;
+    }
+
+    /** Called after mod loading completes to flush any deferred migration write. */
+    public static void flushPendingMigrationSave() {
+        if (pendingMigrationSave && COMMON_SPEC != null) {
+            pendingMigrationSave = false;
+            COMMON_SPEC.save();
+        }
     }
 
     /** Reject malformed or unloaded entity ids in the native config editor. */

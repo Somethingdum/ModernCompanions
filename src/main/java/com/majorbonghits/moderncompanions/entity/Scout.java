@@ -27,8 +27,12 @@ public class Scout extends AbstractHumanCompanionEntity {
 
     public Scout(EntityType<? extends TamableAnimal> type, Level level) {
         super(type, level);
-        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.35D, true));
         boostBaseSpeed();
+    }
+
+    @Override
+    protected void registerCombatGoals() {
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.35D, true));
     }
 
     @Override

@@ -106,6 +106,10 @@ public class Beastmaster extends AbstractHumanCompanionEntity implements RangedA
 
     public Beastmaster(EntityType<? extends TamableAnimal> type, Level level) {
         super(type, level);
+    }
+
+    @Override
+    protected void registerCombatGoals() {
         this.goalSelector.addGoal(2, new ArcherRangedBowAttackGoal<>(this, 1.05D, 22, 20.0F));
     }
 

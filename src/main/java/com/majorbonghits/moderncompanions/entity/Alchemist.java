@@ -22,6 +22,10 @@ public class Alchemist extends AbstractHumanCompanionEntity {
 
     public Alchemist(EntityType<? extends TamableAnimal> type, Level level) {
         super(type, level);
+    }
+
+    @Override
+    protected void registerCombatGoals() {
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0D, true));
     }
 

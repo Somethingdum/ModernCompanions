@@ -31,8 +31,12 @@ public class Berserker extends AbstractHumanCompanionEntity {
 
     public Berserker(EntityType<? extends TamableAnimal> type, Level level) {
         super(type, level);
-        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.25D, true));
         bumpKnockbackResist();
+    }
+
+    @Override
+    protected void registerCombatGoals() {
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.25D, true));
     }
 
     @Override

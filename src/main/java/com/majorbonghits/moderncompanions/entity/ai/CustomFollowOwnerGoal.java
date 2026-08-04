@@ -10,7 +10,10 @@ import net.minecraft.world.phys.Vec3;
 import java.util.EnumSet;
 
 /**
- * Lightweight follow-owner goal that respects the companion's follow flag.
+ * Follow-owner goal that respects the companion's follow flag. Continuation no
+ * longer depends on the navigator having an unfinished path: the goal keeps
+ * running (and repathing) until the companion is actually back inside its
+ * return radius, which is what stops the stall-then-teleport pattern.
  */
 public class CustomFollowOwnerGoal extends Goal {
     private static final int TELEPORT_ATTEMPTS = 10;
@@ -48,7 +51,6 @@ public class CustomFollowOwnerGoal extends Goal {
     @Override
     public boolean canContinueToUse() {
         return owner != null
-                && !companion.getNavigation().isDone()
                 && companion.isFollowing()
                 && !companion.isOrderedToSit()
                 && owner.level() == companion.level()
@@ -80,15 +82,22 @@ public class CustomFollowOwnerGoal extends Goal {
                     && teleport
                     && ModConfig.safeGet(ModConfig.TELEPORT_LEASH)) {
                 if (!tryTeleportCloseToOwner()) {
-                    companion.getNavigation().moveTo(owner, speedModifier); // Fallback if no safe spot found.
+                    companion.getNavigation().moveTo(owner, followSpeed(distanceSq)); // Fallback if no safe spot found.
                 }
             } else {
                 // Return to the companion's selected radius, not directly onto the owner.
                 Vec3 direction = companion.position().subtract(owner.position()).multiply(1.0D, 0.0D, 1.0D).normalize();
                 Vec3 returnPoint = owner.position().add(direction.scale(returnDistance()));
-                companion.getNavigation().moveTo(returnPoint.x, returnPoint.y, returnPoint.z, speedModifier);
+                companion.getNavigation().moveTo(returnPoint.x, returnPoint.y, returnPoint.z, followSpeed(distanceSq));
             }
         }
+    }
+
+    /** Far-behind companions hustle to catch up instead of relying on teleports. */
+    private double followSpeed(double distanceSq) {
+        return distanceSq > 24.0D * 24.0D && companion.getTarget() == null
+                ? speedModifier * 1.25D
+                : speedModifier;
     }
 
     private double leashDistanceSquared() {
