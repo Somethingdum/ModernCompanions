@@ -16,8 +16,10 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -80,17 +82,20 @@ public final class ZoneBreachTracker {
             return;
         }
 
-        List<LivingEntity> intruders = level.getEntitiesOfClass(LivingEntity.class, zone.box(),
+        List<LivingEntity> found = level.getEntitiesOfClass(LivingEntity.class, zone.box(),
                 entity -> entity.isAlive()
                         && entity.getType().getCategory() == MobCategory.MONSTER);
-        if (intruders.size() > MAX_INTRUDERS_PER_SWEEP) {
-            intruders = intruders.subList(0, MAX_INTRUDERS_PER_SWEEP);
-        }
+        // Effectively final so the pruning lambda below can capture it.
+        final List<LivingEntity> intruders = found.size() > MAX_INTRUDERS_PER_SWEEP
+                ? found.subList(0, MAX_INTRUDERS_PER_SWEEP)
+                : found;
 
         Map<UUID, Long> unseen = UNSEEN_SINCE.computeIfAbsent(zone.id(), key -> new HashMap<>());
         List<LivingEntity> stillUnseen = new ArrayList<>();
+        Set<UUID> present = new HashSet<>();
 
         for (LivingEntity intruder : intruders) {
+            present.add(intruder.getUUID());
             if (perceivedByAnyGuard(guards, intruder)) {
                 // A guard has eyes on it; this is handled, not a breach.
                 unseen.remove(intruder.getUUID());
@@ -100,8 +105,9 @@ public final class ZoneBreachTracker {
             stillUnseen.add(intruder);
         }
 
-        // Forget entries for anything that left or died.
-        unseen.keySet().removeIf(id -> intruders.stream().noneMatch(e -> e.getUUID().equals(id)));
+        // Forget entries for anything that left or died. A set lookup also avoids
+        // re-scanning the intruder list once per retained entry.
+        unseen.keySet().retainAll(present);
 
         nudgeGuardsToward(guards, stillUnseen);
         warnIfOverdue(owner, zone, unseen, now);

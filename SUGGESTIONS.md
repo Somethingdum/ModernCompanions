@@ -530,3 +530,11 @@
 - Now that `HuntGoal` defaults to every adult wild animal, verify it does not surprise anyone by hunting villagers' livestock or a modded creature that is technically an `Animal` but should not be attacked. `hunter_denied` is the escape hatch and should be populated with anything found this way.
 - Remaining unimplemented work, in rough value order: a hearing channel so companions investigate noises rather than only zone breaches; melee positioning, meaning strafing ranged attackers and not body-blocking the owner; the coarse route planner for marches beyond the navigator's range; number-key control groups and the radial menu; and the ambition items such as chat bubbles and companion-to-companion dialogue.
 - Nothing in this series has been observed in a running game. The situation matrix in section 21 of the plan is the checklist; run it before treating any of this as finished.
+
+## 2026-08-04 (CI build pipeline and the first real compile)
+
+- The CI build is now the source of truth for compilation. Check the Actions tab after any change rather than relying on a local parse.
+- The whole codebase emits `EventBusSubscriber.bus()` deprecation warnings on 1.21.1. They are pre-existing and harmless today, but that API is marked for removal, so migrating the annotations is worth doing before a NeoForge bump forces it.
+- Consider narrowing the workflow trigger once development settles. Building on every push to every `claude/**` branch is convenient now but will consume Actions minutes quickly.
+- The release is a single rolling `latest` tag that is overwritten on each build. If you ever want to keep a specific known-good version around, cut a real tagged release from that commit rather than relying on the rolling one.
+- Now that a jar can actually be produced, the in-world verification listed throughout this file becomes possible. That is the remaining gap: every behaviour in this overhaul has been reasoned about and unit-tested, and none of it has been watched in a running game.
