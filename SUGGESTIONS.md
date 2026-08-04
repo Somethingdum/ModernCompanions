@@ -462,3 +462,11 @@
 - Consider surfacing withdrawing state to the client so the HUD and Jade tooltip can show that a companion is breaking off rather than looking like it is fleeing; the flag is currently server-side only.
 - Second Wind currently triggers off a fixed 40-tick window and a 30 percent reduction. If it feels too strong or too weak, change those before changing the health threshold, since the threshold interacts with the withdraw boundary.
 - Once the perception layer lands, feed the cornered check from known contacts rather than a raw path attempt, so being surrounded counts as cornered even when a technically walkable route exists.
+
+## 2026-08-04 (remove the taming system)
+
+- Load a pre-existing world with untamed companions standing in structures and confirm they are recruitable on first interaction, that no console warnings appear about the dropped NBT keys, and that already-tamed companions are unaffected.
+- Verify the GUI recruit hint renders for unowned companions in both the companion screen and the Curios screen, since both call `getFoodStatusForGui`.
+- The three resource-item config lists are now unused but deliberately retained so existing config files still validate. Remove them, and the `pickResource` helper with its test, in a later release once players have loaded the game at least once.
+- Feeding a tamed companion for bond experience still works and is unchanged; confirm it did not regress, since it lived in the same interaction method as the removed taming branch.
+- Consider whether HANDSHAKE should become the default. INSTANT is the requested behaviour, but structure residents are easy to recruit by accident when passing through a village.

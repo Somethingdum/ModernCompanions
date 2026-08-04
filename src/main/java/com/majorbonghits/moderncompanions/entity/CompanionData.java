@@ -64,137 +64,9 @@ public class CompanionData {
             Items.TROPICAL_FISH
     );
 
-     public static final MutableComponent[] tameFail = new MutableComponent[]{
-        Component.translatable("dialogue.modern_companions.tame_fail.0"),
-        Component.translatable("dialogue.modern_companions.tame_fail.1"),
-        Component.translatable("dialogue.modern_companions.tame_fail.2"),
-        Component.translatable("dialogue.modern_companions.tame_fail.3"),
-        Component.translatable("dialogue.modern_companions.tame_fail.4"),
-        Component.translatable("dialogue.modern_companions.tame_fail.5"),
-        Component.translatable("dialogue.modern_companions.tame_fail.6"),
-        Component.translatable("dialogue.modern_companions.tame_fail.7"),
-        Component.translatable("dialogue.modern_companions.tame_fail.8"),
-        Component.translatable("dialogue.modern_companions.tame_fail.9"),
-        Component.translatable("dialogue.modern_companions.tame_fail.10"),
-        Component.translatable("dialogue.modern_companions.tame_fail.11"),
-        Component.translatable("dialogue.modern_companions.tame_fail.12"),
-        Component.translatable("dialogue.modern_companions.tame_fail.13"),
-        Component.translatable("dialogue.modern_companions.tame_fail.14"),
-        Component.translatable("dialogue.modern_companions.tame_fail.15"),
-        Component.translatable("dialogue.modern_companions.tame_fail.16"),
-        Component.translatable("dialogue.modern_companions.tame_fail.17"),
-        Component.translatable("dialogue.modern_companions.tame_fail.18"),
-        Component.translatable("dialogue.modern_companions.tame_fail.19"),
-        Component.translatable("dialogue.modern_companions.tame_fail.20"),
-        Component.translatable("dialogue.modern_companions.tame_fail.21"),
-        Component.translatable("dialogue.modern_companions.tame_fail.22"),
-        Component.translatable("dialogue.modern_companions.tame_fail.23"),
-        Component.translatable("dialogue.modern_companions.tame_fail.24"),
-        Component.translatable("dialogue.modern_companions.tame_fail.25"),
-        Component.translatable("dialogue.modern_companions.tame_fail.26"),
-        Component.translatable("dialogue.modern_companions.tame_fail.27"),
-        Component.translatable("dialogue.modern_companions.tame_fail.28"),
-        Component.translatable("dialogue.modern_companions.tame_fail.29")
-    };
 
-    public static final MutableComponent[] notTamed = new MutableComponent[]{
-            Component.translatable("dialogue.modern_companions.not_tamed.0"),
-            Component.translatable("dialogue.modern_companions.not_tamed.1"),
-            Component.translatable("dialogue.modern_companions.not_tamed.2"),
-            Component.translatable("dialogue.modern_companions.not_tamed.3"),
-            Component.translatable("dialogue.modern_companions.not_tamed.4"),
-            Component.translatable("dialogue.modern_companions.not_tamed.5"),
-            Component.translatable("dialogue.modern_companions.not_tamed.6"),
-            Component.translatable("dialogue.modern_companions.not_tamed.7"),
-            Component.translatable("dialogue.modern_companions.not_tamed.8"),
-            Component.translatable("dialogue.modern_companions.not_tamed.9"),
-            Component.translatable("dialogue.modern_companions.not_tamed.10"),
-            Component.translatable("dialogue.modern_companions.not_tamed.11"),
-            Component.translatable("dialogue.modern_companions.not_tamed.12"),
-            Component.translatable("dialogue.modern_companions.not_tamed.13"),
-            Component.translatable("dialogue.modern_companions.not_tamed.14"),
-            Component.translatable("dialogue.modern_companions.not_tamed.15"),
-            Component.translatable("dialogue.modern_companions.not_tamed.16"),
-            Component.translatable("dialogue.modern_companions.not_tamed.17"),
-            Component.translatable("dialogue.modern_companions.not_tamed.18"),
-            Component.translatable("dialogue.modern_companions.not_tamed.19"),
-            Component.translatable("dialogue.modern_companions.not_tamed.20"),
-            Component.translatable("dialogue.modern_companions.not_tamed.21"),
-            Component.translatable("dialogue.modern_companions.not_tamed.22"),
-            Component.translatable("dialogue.modern_companions.not_tamed.23"),
-            Component.translatable("dialogue.modern_companions.not_tamed.24"),
-            Component.translatable("dialogue.modern_companions.not_tamed.25"),
-            Component.translatable("dialogue.modern_companions.not_tamed.26"),
-            Component.translatable("dialogue.modern_companions.not_tamed.27"),
-            Component.translatable("dialogue.modern_companions.not_tamed.28"),
-            Component.translatable("dialogue.modern_companions.not_tamed.29")
-    };
 
-    public static final MutableComponent[] WRONG_FOOD = new MutableComponent[]{
-            Component.translatable("dialogue.modern_companions.wrong_food.0"),
-            Component.translatable("dialogue.modern_companions.wrong_food.1"),
-            Component.translatable("dialogue.modern_companions.wrong_food.2"),
-            Component.translatable("dialogue.modern_companions.wrong_food.3"),
-            Component.translatable("dialogue.modern_companions.wrong_food.4"),
-            Component.translatable("dialogue.modern_companions.wrong_food.5"),
-            Component.translatable("dialogue.modern_companions.wrong_food.6"),
-            Component.translatable("dialogue.modern_companions.wrong_food.7"),
-            Component.translatable("dialogue.modern_companions.wrong_food.8"),
-            Component.translatable("dialogue.modern_companions.wrong_food.9"),
-            Component.translatable("dialogue.modern_companions.wrong_food.10"),
-            Component.translatable("dialogue.modern_companions.wrong_food.11"),
-            Component.translatable("dialogue.modern_companions.wrong_food.12"),
-            Component.translatable("dialogue.modern_companions.wrong_food.13"),
-            Component.translatable("dialogue.modern_companions.wrong_food.14"),
-            Component.translatable("dialogue.modern_companions.wrong_food.15"),
-            Component.translatable("dialogue.modern_companions.wrong_food.16"),
-            Component.translatable("dialogue.modern_companions.wrong_food.17"),
-            Component.translatable("dialogue.modern_companions.wrong_food.18"),
-            Component.translatable("dialogue.modern_companions.wrong_food.19"),
-            Component.translatable("dialogue.modern_companions.wrong_food.20"),
-            Component.translatable("dialogue.modern_companions.wrong_food.21"),
-            Component.translatable("dialogue.modern_companions.wrong_food.22"),
-            Component.translatable("dialogue.modern_companions.wrong_food.23"),
-            Component.translatable("dialogue.modern_companions.wrong_food.24"),
-            Component.translatable("dialogue.modern_companions.wrong_food.25"),
-            Component.translatable("dialogue.modern_companions.wrong_food.26"),
-            Component.translatable("dialogue.modern_companions.wrong_food.27"),
-            Component.translatable("dialogue.modern_companions.wrong_food.28"),
-            Component.translatable("dialogue.modern_companions.wrong_food.29")
-    };
 
-    public static final MutableComponent[] ENOUGH_FOOD = new MutableComponent[]{
-            Component.translatable("dialogue.modern_companions.enough_food.0"),
-            Component.translatable("dialogue.modern_companions.enough_food.1"),
-            Component.translatable("dialogue.modern_companions.enough_food.2"),
-            Component.translatable("dialogue.modern_companions.enough_food.3"),
-            Component.translatable("dialogue.modern_companions.enough_food.4"),
-            Component.translatable("dialogue.modern_companions.enough_food.5"),
-            Component.translatable("dialogue.modern_companions.enough_food.6"),
-            Component.translatable("dialogue.modern_companions.enough_food.7"),
-            Component.translatable("dialogue.modern_companions.enough_food.8"),
-            Component.translatable("dialogue.modern_companions.enough_food.9"),
-            Component.translatable("dialogue.modern_companions.enough_food.10"),
-            Component.translatable("dialogue.modern_companions.enough_food.11"),
-            Component.translatable("dialogue.modern_companions.enough_food.12"),
-            Component.translatable("dialogue.modern_companions.enough_food.13"),
-            Component.translatable("dialogue.modern_companions.enough_food.14"),
-            Component.translatable("dialogue.modern_companions.enough_food.15"),
-            Component.translatable("dialogue.modern_companions.enough_food.16"),
-            Component.translatable("dialogue.modern_companions.enough_food.17"),
-            Component.translatable("dialogue.modern_companions.enough_food.18"),
-            Component.translatable("dialogue.modern_companions.enough_food.19"),
-            Component.translatable("dialogue.modern_companions.enough_food.20"),
-            Component.translatable("dialogue.modern_companions.enough_food.21"),
-            Component.translatable("dialogue.modern_companions.enough_food.22"),
-            Component.translatable("dialogue.modern_companions.enough_food.23"),
-            Component.translatable("dialogue.modern_companions.enough_food.24"),
-            Component.translatable("dialogue.modern_companions.enough_food.25"),
-            Component.translatable("dialogue.modern_companions.enough_food.26"),
-            Component.translatable("dialogue.modern_companions.enough_food.27"),
-            Component.translatable("dialogue.modern_companions.enough_food.28"),
-            Component.translatable("dialogue.modern_companions.enough_food.29")
-    };
 
     // Male (0) / female (1) skins. Every entry mirrors a bundled 64x64 texture.
     public static final ResourceLocation[][] skins = new ResourceLocation[][]{
@@ -603,25 +475,6 @@ public class CompanionData {
         return candArmor.getDefense() > curArmor.getDefense();
     }
 
-    public static Map<Item, Integer> getRandomFoodRequirement(Random random) {
-        return getRandomFoodRequirement(random, false, false);
-    }
-
-    public static Map<Item, Integer> getRandomFoodRequirement(Random random, Player player) {
-        updateResourceProgress(player);
-        var data = player.getPersistentData();
-        return getRandomFoodRequirement(random, data.getBoolean(REACHED_NETHER), data.getBoolean(REACHED_OCEAN));
-    }
-
-    private static Map<Item, Integer> getRandomFoodRequirement(Random random, boolean reachedNether, boolean reachedOcean) {
-        Map<Item, Integer> food = new HashMap<>();
-        Item foodItem = pickAllowedFood(random);
-        Item resourceItem = pickResource(random, reachedNether, reachedOcean);
-        // 2–5 food, 2–6 resource
-        food.put(foodItem, random.nextInt(4) + 2);
-        food.put(resourceItem, random.nextInt(5) + 2);
-        return food;
-    }
 
     /** Accept configured foods plus safe standard foods supplied by other mods. */
     public static boolean isFood(ItemStack stack) {
@@ -697,10 +550,11 @@ public class CompanionData {
         }
     }
 
-    private static Item pickAllowedFood(Random random) {
-        return pickConfiguredFood(random);
-    }
-
+    /**
+     * Resource-tier selection. Recruitment no longer asks for resources, so this
+     * is retained only for its progression-gating regression coverage and for the
+     * config lists it reads, which are kept one version for compatibility.
+     */
     static Item pickResource(Random random, boolean reachedNether, boolean reachedOcean) {
         List<? extends String> selectedTier = random.nextFloat() < 0.70F
                 ? ModConfig.safeGet(ModConfig.COMMON_RESOURCE_ITEMS)

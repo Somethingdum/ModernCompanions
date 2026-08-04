@@ -55,6 +55,7 @@ public final class ModConfig {
     public static ModConfigSpec.BooleanValue CREEPER_WARNING;
     public static ModConfigSpec.EnumValue<CompanionVoiceMode> COMPANION_VOICE_MODE;
     public static ModConfigSpec.IntValue COMPANION_VOICE_VOLUME;
+    public static ModConfigSpec.EnumValue<CompanionRecruitMode> RECRUIT_MODE;
     public static ModConfigSpec.ConfigValue<List<? extends String>> ALL_FOODS;
     public static ModConfigSpec.ConfigValue<List<? extends String>> EXTRA_HEAL_CONSUMABLES;
     public static ModConfigSpec.ConfigValue<List<? extends String>> COMMON_RESOURCE_ITEMS;
@@ -181,21 +182,28 @@ public final class ModConfig {
                 .defineInRange("voiceVolume", 80, 0, 100);
         builder.pop();
 
-        builder.translation("modern_companions.configuration.taming").push("taming");
-        ALL_FOODS = builder.translation("modern_companions.configuration.taming.all_foods")
-                .comment("Configured item registry ids companions may request, choose as favorites, and eat for healing. Safe standard foods from other mods are detected automatically.")
+        builder.translation("modern_companions.configuration.recruitment").push("recruitment");
+        RECRUIT_MODE = builder.translation("modern_companions.configuration.recruitment.mode")
+                .comment("INSTANT: any interaction with an unowned companion recruits it immediately.",
+                        "HANDSHAKE: only a sneaking interaction recruits, so you can talk to structure residents",
+                        "without taking them along. The old feed-them-items taming gate no longer exists.")
+                .defineEnum("mode", CompanionRecruitMode.INSTANT);
+        ALL_FOODS = builder.translation("modern_companions.configuration.recruitment.all_foods")
+                .comment("Configured item registry ids companions may choose as favorites and eat for healing. Safe standard foods from other mods are detected automatically.")
                 .defineList("allFoods", DEFAULT_ALL_FOODS, () -> "minecraft:bread", ModConfig::isKnownItemId);
-        EXTRA_HEAL_CONSUMABLES = builder.translation("modern_companions.configuration.taming.extra_heal_consumables")
-                .comment("Additional item registry ids companions may consume for healing but never request while taming.")
+        EXTRA_HEAL_CONSUMABLES = builder.translation("modern_companions.configuration.recruitment.extra_heal_consumables")
+                .comment("Additional item registry ids companions may consume for healing but never choose as a favorite.")
                 .defineListAllowEmpty("extraHealConsumables", DEFAULT_EXTRA_HEAL_CONSUMABLES, () -> "minecraft:golden_apple", ModConfig::isKnownItemId);
-        COMMON_RESOURCE_ITEMS = builder.translation("modern_companions.configuration.taming.common_resource_items")
-                .comment("Item registry ids used for common companion taming-resource requests.")
+        // Retained for one version so existing config files still validate; recruitment
+        // no longer requests resources, and these keys are removed in a later release.
+        COMMON_RESOURCE_ITEMS = builder.translation("modern_companions.configuration.recruitment.common_resource_items")
+                .comment("Unused since recruitment became instant. Retained so existing configs keep loading.")
                 .defineList("commonResourceItems", DEFAULT_COMMON_RESOURCE_ITEMS, () -> "minecraft:iron_ingot", ModConfig::isKnownItemId);
-        UNCOMMON_RESOURCE_ITEMS = builder.translation("modern_companions.configuration.taming.uncommon_resource_items")
-                .comment("Item registry ids used for uncommon companion taming-resource requests.")
+        UNCOMMON_RESOURCE_ITEMS = builder.translation("modern_companions.configuration.recruitment.uncommon_resource_items")
+                .comment("Unused since recruitment became instant. Retained so existing configs keep loading.")
                 .defineList("uncommonResourceItems", DEFAULT_UNCOMMON_RESOURCE_ITEMS, () -> "minecraft:gold_ingot", ModConfig::isKnownItemId);
-        RARE_RESOURCE_ITEMS = builder.translation("modern_companions.configuration.taming.rare_resource_items")
-                .comment("Item registry ids used for rare companion taming-resource requests.")
+        RARE_RESOURCE_ITEMS = builder.translation("modern_companions.configuration.recruitment.rare_resource_items")
+                .comment("Unused since recruitment became instant. Retained so existing configs keep loading.")
                 .defineList("rareResourceItems", DEFAULT_RARE_RESOURCE_ITEMS, () -> "minecraft:diamond", ModConfig::isKnownItemId);
         builder.pop();
 

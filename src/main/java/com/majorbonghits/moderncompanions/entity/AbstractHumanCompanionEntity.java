@@ -1,5 +1,6 @@
 package com.majorbonghits.moderncompanions.entity;
 
+import com.majorbonghits.moderncompanions.core.CompanionRecruitMode;
 import com.majorbonghits.moderncompanions.core.ModConfig;
 import com.majorbonghits.moderncompanions.core.ModSounds;
 import com.majorbonghits.moderncompanions.compat.firearms.FirearmSupport;
@@ -158,16 +159,8 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
             .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.OPTIONAL_BLOCK_POS);
     private static final EntityDataAccessor<String> DELIVERY_DIMENSION = SynchedEntityData
             .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.STRING);
-    private static final EntityDataAccessor<String> FOOD1 = SynchedEntityData
-            .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.STRING);
-    private static final EntityDataAccessor<String> FOOD2 = SynchedEntityData
-            .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> FAVORITE_FOOD = SynchedEntityData
             .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.STRING);
-    private static final EntityDataAccessor<Integer> FOOD1_AMT = SynchedEntityData
-            .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.INT);
-    private static final EntityDataAccessor<Integer> FOOD2_AMT = SynchedEntityData
-            .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> EXP_PROGRESS = SynchedEntityData
             .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Integer> SPECIALIST = SynchedEntityData
@@ -269,9 +262,6 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
     // Vanilla LivingEntity equipment is the single source of truth; only manual locks need extra state.
     private final boolean[] manuallyEquipped = new boolean[6];
     private ItemStack savedOffhand = ItemStack.EMPTY;
-    protected final Map<Item, Integer> foodRequirements = new HashMap<>();
-    private boolean resourceRequirementResolved;
-    private boolean untamedGreetingPlayed;
     private boolean renderingEquipment;
     protected final Random rand = new Random();
 
@@ -421,11 +411,7 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         if (minerOreMemory == null) minerOreMemory = new java.util.ArrayList<>();
         minerOreMemory.clear();
         minerOreIndex = 0;
-        builder.define(FOOD1, "");
-        builder.define(FOOD2, "");
         builder.define(FAVORITE_FOOD, "");
-        builder.define(FOOD1_AMT, 0);
-        builder.define(FOOD2_AMT, 0);
         builder.define(EXP_PROGRESS, 0.0F);
         builder.define(STR, 4);
         builder.define(DEX, 4);
@@ -1283,15 +1269,11 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         setPatrolRadius(4);
     }
 
-    public Component getFoodStatus() {
-        Component f1 = foodRequirementComponent(entityData.get(FOOD1), entityData.get(FOOD1_AMT));
-        Component f2 = foodRequirementComponent(entityData.get(FOOD2), entityData.get(FOOD2_AMT));
-        return Component.translatable("food.modern_companions.wants", f1, f2);
-    }
-
     public Component getFoodStatusForGui() {
         if (!this.isTame()) {
-            return getWantedFoodsCompact();
+            // Recruitment is a single interaction now, so the old wanted-food list is
+            // replaced by a hint telling the player exactly that.
+            return Component.translatable("gui.modern_companions.recruit.hint");
         }
         if (this.getHealth() < this.getMaxHealth() - 0.5F) {
             return hasFoodInInventory()
@@ -1314,24 +1296,6 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
     private void assignFavoriteFood() {
         Item favorite = CompanionData.pickConfiguredFood(this.random);
         this.entityData.set(FAVORITE_FOOD, BuiltInRegistries.ITEM.getKey(favorite).toString());
-    }
-
-    public Component getWantedFoodsCompact() {
-        int amt1 = entityData.get(FOOD1_AMT);
-        int amt2 = entityData.get(FOOD2_AMT);
-        String id1 = entityData.get(FOOD1);
-        String id2 = entityData.get(FOOD2);
-        Component first = foodRequirementComponent(id1, amt1);
-        Component second = foodRequirementComponent(id2, amt2);
-        if (amt1 <= 0 && amt2 <= 0) return Component.empty();
-        if (amt1 > 0 && amt2 > 0) return Component.translatable("food.modern_companions.compact.both", first, second);
-        return amt1 > 0 ? first : second;
-    }
-
-    private Component foodRequirementComponent(String id, int amount) {
-        return amount > 0
-                ? Component.translatable("food.modern_companions.item_amount", amount, prettyItemComponent(id))
-                : Component.translatable("food.modern_companions.done");
     }
 
     private Component prettyItemComponent(String id) {
@@ -1656,10 +1620,6 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
     /** Controls automatic main-hand selection without changing manual inventory storage. */
     protected boolean isAutomaticMainHandCandidate(ItemStack stack) {
         return true;
-    }
-
-    public Map<Item, Integer> getFoodRequirements() {
-        return foodRequirements;
     }
 
     public int getSkinIndex() {
@@ -2288,63 +2248,43 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
 
     /* ---------- Interaction ---------- */
 
+    /**
+     * Recruits an unowned companion on the spot. The old taming loop demanded one
+     * or two randomly chosen food or resource items before a companion would join;
+     * that gate is gone, and the first interaction is the whole recruitment.
+     *
+     * <p>In HANDSHAKE mode the player must sneak, which is useful when walking
+     * past structure residents you do not intend to recruit yet.
+     */
+    public void recruit(Player player) {
+        if (this.level().isClientSide() || this.isTame()) return;
+
+        if (ModConfig.safeGet(ModConfig.RECRUIT_MODE) == CompanionRecruitMode.HANDSHAKE && !player.isShiftKeyDown()) {
+            CompanionVoice.play(this, ModSounds.Cue.GREETING);
+            player.sendSystemMessage(Component.translatable("chat.type.text", this.getDisplayName(),
+                    Component.translatable("dialogue.modern_companions.recruit.offer")));
+            return;
+        }
+
+        this.tame(player);
+        CompanionVoice.play(this, ModSounds.Cue.CONFIRMATION);
+        setFirstTamedGameTime(this.level().getGameTime());
+        syncPersonalityToData();
+        player.sendSystemMessage(Component.translatable("chat.type.text", this.getDisplayName(),
+                Component.translatable("dialogue.modern_companions.recruit.accepted")));
+        player.sendSystemMessage(Component.translatable("message.modern_companions.companion_added"));
+        setPatrolPos(null);
+        setPatrolling(false);
+        setFollowing(true);
+        setPatrolRadius(4);
+    }
+
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack held = player.getItemInHand(hand);
         if (hand == InteractionHand.MAIN_HAND) {
             if (!this.isTame() && !this.level().isClientSide()) {
-                if (!untamedGreetingPlayed) {
-                    untamedGreetingPlayed = true;
-                    CompanionVoice.play(this, ModSounds.Cue.GREETING);
-                }
-                if (foodRequirements.isEmpty() || !resourceRequirementResolved) {
-                    assignFoodRequirements(player);
-                }
-                if (held.isEmpty()) {
-                    // Empty-hand conversations use the dedicated pre-taming dialogue pool.
-                    player.sendSystemMessage(Component.translatable("chat.type.text", this.getDisplayName(),
-                            CompanionData.notTamed[this.random.nextInt(CompanionData.notTamed.length)]));
-                    player.sendSystemMessage(getFoodStatus());
-                } else if (foodRequirements.containsKey(held.getItem())) {
-                    Item fedItem = held.getItem();
-                    int remaining = foodRequirements.get(fedItem);
-                    if (remaining > 0) {
-                        held.shrink(1);
-                        foodRequirements.put(fedItem, remaining - 1);
-                        syncFoodRequirements();
-                        if (foodRequirements.values().stream().allMatch(v -> v <= 0)) {
-                            this.tame(player);
-                            CompanionVoice.play(this, ModSounds.Cue.CONFIRMATION);
-                            setFirstTamedGameTime(this.level().getGameTime());
-                            syncPersonalityToData();
-                            player.sendSystemMessage(Component.translatable("chat.type.text", this.getDisplayName(),
-                                    Component.translatable("dialogue.modern_companions.tamed.thanks")));
-                            player.sendSystemMessage(Component.translatable("message.modern_companions.companion_added"));
-                            setPatrolPos(null);
-                            setPatrolling(false);
-                            setFollowing(true);
-                            setPatrolRadius(4);
-                        } else if (foodRequirements.get(fedItem) == 0) {
-                            CompanionVoice.play(this, ModSounds.Cue.CONFIRMATION);
-                            player.sendSystemMessage(Component.translatable("chat.type.text", this.getDisplayName(),
-                                    CompanionData.ENOUGH_FOOD[this.random
-                                            .nextInt(CompanionData.ENOUGH_FOOD.length)]));
-                        } else {
-                            CompanionVoice.play(this, ModSounds.Cue.CONFIRMATION);
-                            player.sendSystemMessage(Component.translatable("chat.type.text", this.getDisplayName(),
-                                    CompanionData.tameFail[this.random.nextInt(CompanionData.tameFail.length)]));
-                        }
-                    } else {
-                        CompanionVoice.play(this, ModSounds.Cue.REFUSAL);
-                        player.sendSystemMessage(Component.translatable("chat.type.text", this.getDisplayName(),
-                                CompanionData.ENOUGH_FOOD[this.random.nextInt(CompanionData.ENOUGH_FOOD.length)]));
-                    }
-                } else {
-                    CompanionVoice.play(this, ModSounds.Cue.REFUSAL);
-                    player.sendSystemMessage(Component.translatable("chat.type.text", this.getDisplayName(),
-                            CompanionData.WRONG_FOOD[this.random.nextInt(CompanionData.WRONG_FOOD.length)]));
-                    player.sendSystemMessage(getFoodStatus());
-                }
+                recruit(player);
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             } else {
                 if (this.isAlliedTo(player)) {
@@ -2410,37 +2350,6 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         player.openMenu(provider, buf -> buf.writeVarInt(getId()));
     }
 
-    private void assignFoodRequirements() {
-        assignFoodRequirements(null);
-    }
-
-    private void assignFoodRequirements(Player player) {
-        Map<Item, Integer> newReq = player == null
-                ? CompanionData.getRandomFoodRequirement(rand)
-                : CompanionData.getRandomFoodRequirement(rand, player);
-        foodRequirements.clear();
-        foodRequirements.putAll(newReq);
-        resourceRequirementResolved = player != null;
-        var entries = foodRequirements.entrySet().stream().toList();
-        this.entityData.set(FOOD1, BuiltInRegistries.ITEM.getKey(entries.get(0).getKey()).toString());
-        this.entityData.set(FOOD1_AMT, entries.get(0).getValue());
-        this.entityData.set(FOOD2, BuiltInRegistries.ITEM.getKey(entries.get(1).getKey()).toString());
-        this.entityData.set(FOOD2_AMT, entries.get(1).getValue());
-    }
-
-    private void syncFoodRequirements() {
-        if (foodRequirements.isEmpty())
-            return;
-        foodRequirements.forEach((item, count) -> {
-            String id = BuiltInRegistries.ITEM.getKey(item).toString();
-            if (id.equals(entityData.get(FOOD1))) {
-                entityData.set(FOOD1_AMT, count);
-            } else if (id.equals(entityData.get(FOOD2))) {
-                entityData.set(FOOD2_AMT, count);
-            }
-        });
-    }
-
     private String prettyItemName(String id) {
         ResourceLocation rl = ResourceLocation.tryParse(id);
         if (rl == null)
@@ -2499,7 +2408,6 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         tag.putString("CustomSkinUrl", this.entityData.get(CUSTOM_SKIN_URL));
         tag.putString("CustomBio", this.entityData.get(CUSTOM_BIO));
         tag.putBoolean("Eating", this.isEating());
-        tag.putBoolean("UntamedGreetingPlayed", untamedGreetingPlayed);
         tag.putBoolean("Alert", this.isAlert());
         tag.putBoolean("Hunting", this.isHunting());
         tag.putBoolean("Patrolling", this.isPatrolling());
@@ -2525,12 +2433,7 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         tag.putInt("XpLevel", this.getExpLvl());
         tag.putInt("XpTotal", this.totalExperience);
         tag.putInt("KillCount", this.getKillCount());
-        tag.putString("food1", entityData.get(FOOD1));
-        tag.putString("food2", entityData.get(FOOD2));
         tag.putString("FavoriteFood", entityData.get(FAVORITE_FOOD));
-        tag.putInt("food1_amt", entityData.get(FOOD1_AMT));
-        tag.putInt("food2_amt", entityData.get(FOOD2_AMT));
-        tag.putBoolean("ResourceRequirementResolved", resourceRequirementResolved);
         tag.putInt("Strength", getBaseStrength());
         tag.putInt("Dexterity", getBaseDexterity());
         tag.putInt("Intelligence", getBaseIntelligence());
@@ -2590,7 +2493,9 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
             this.setCustomBio(tag.getString("CustomBio"));
         }
         this.setEating(tag.getBoolean("Eating"));
-        untamedGreetingPlayed = tag.getBoolean("UntamedGreetingPlayed");
+        // Legacy taming keys (UntamedGreetingPlayed, food1/food2 and their amounts,
+        // ResourceRequirementResolved) are intentionally not read: recruitment is a
+        // single interaction now, so old saves simply drop them.
         entityData.set(EQUIPMENT_RENDER_MASK, tag.contains("EquipmentRenderMask")
                 ? tag.getInt("EquipmentRenderMask") : ALL_EQUIPMENT_RENDER_MASK);
         this.setAlert(tag.getBoolean("Alert"));
@@ -2631,18 +2536,7 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         this.setExpLvl(tag.getInt("XpLevel"));
         setKillCount(tag.contains("KillCount") ? tag.getInt("KillCount") : 0);
         syncExpProgress();
-        entityData.set(FOOD1, tag.getString("food1"));
-        entityData.set(FOOD2, tag.getString("food2"));
         entityData.set(FAVORITE_FOOD, tag.getString("FavoriteFood"));
-        entityData.set(FOOD1_AMT, tag.getInt("food1_amt"));
-        entityData.set(FOOD2_AMT, tag.getInt("food2_amt"));
-        resourceRequirementResolved = tag.contains("ResourceRequirementResolved")
-                ? tag.getBoolean("ResourceRequirementResolved") : this.isTame();
-        foodRequirements.clear();
-        ResourceLocation id1 = ResourceLocation.parse(entityData.get(FOOD1));
-        ResourceLocation id2 = ResourceLocation.parse(entityData.get(FOOD2));
-        foodRequirements.put(BuiltInRegistries.ITEM.get(id1), entityData.get(FOOD1_AMT));
-        foodRequirements.put(BuiltInRegistries.ITEM.get(id2), entityData.get(FOOD2_AMT));
         if (tag.getInt("baseHealth") == 0) {
             this.setBaseHealth(ModConfig.safeGet(ModConfig.BASE_HEALTH));
         } else {
@@ -2922,7 +2816,6 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         personality.rollBackstory(this.random);
         personality.setMorale(0.0F);
         syncPersonalityToData();
-        assignFoodRequirements();
         assignFavoriteFood();
 
         if (ModConfig.safeGet(ModConfig.SPAWN_ARMOR)) {
@@ -2994,7 +2887,6 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         setPatrolling(true);
         setSprintEnabled(false);
         setPatrolRadius(15);
-        assignFoodRequirements();
         if (this.isOrderedToSit()) {
             this.setOrderedToSit(false);
         }
