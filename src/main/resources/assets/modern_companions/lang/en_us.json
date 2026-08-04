@@ -834,5 +834,8 @@
   "message.modern_companions.zone.posted_squad": "Squad %s posted to guard %s: %s.",
   "modern_companions.configuration.zones": "Perimeter Zones",
   "modern_companions.configuration.zones.depth_below": "Zone Depth Below",
-  "modern_companions.configuration.zones.height_above": "Zone Height Above"
+  "modern_companions.configuration.zones.height_above": "Zone Height Above",
+  "modern_companions.configuration.combat.fire_lane_clearance": "Fire Lane Clearance",
+  "modern_companions.configuration.combat.sight_range": "Sight Range",
+  "modern_companions.configuration.combat.memory_ticks": "Contact Memory Duration"
 }

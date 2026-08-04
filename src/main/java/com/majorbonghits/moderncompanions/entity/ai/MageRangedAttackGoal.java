@@ -107,6 +107,11 @@ public class MageRangedAttackGoal<T extends AbstractMageCompanion> extends Goal 
                 this.attackTime = 1;
                 return;
             }
+            // A spell that would pass through an ally is not worth casting.
+            if (!CompanionFireDiscipline.canFireAt(this.caster, target)) {
+                this.attackTime = 1;
+                return;
+            }
             boolean heavy = this.caster.tryHeavyAttack(target, clamped);
             if (!heavy) {
                 this.caster.performRangedAttack(target, clamped);

@@ -50,6 +50,8 @@ public final class FirearmAttackGoal extends Goal {
         companion.getNavigation().stop();
         aimAt(target);
         if (fireCooldown-- > 0) return;
+        // Firearms hit instantly and hard, so the lane check matters most here.
+        if (!CompanionFireDiscipline.canFireAt(companion, target)) return;
         FirearmSupport.TacZShotResult result = FirearmSupport.shootTacZ(companion, target);
         if (result == FirearmSupport.TacZShotResult.SUCCESS) {
             fireCooldown = 8;

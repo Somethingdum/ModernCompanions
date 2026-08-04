@@ -221,3 +221,20 @@ tasks.register("zoneGeometryCheck", JavaExec) {
 tasks.named("check") {
     dependsOn tasks.named("zoneGeometryCheck")
 }
+
+tasks.register("perceptionRulesCheck", JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = "com.majorbonghits.moderncompanions.entity.ai.PerceptionRulesTest"
+    jvmArgs "-ea"
+}
+
+tasks.register("fireLineCheck", JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = "com.majorbonghits.moderncompanions.entity.ai.FireLineRulesTest"
+    jvmArgs "-ea"
+}
+
+tasks.named("check") {
+    dependsOn tasks.named("perceptionRulesCheck")
+    dependsOn tasks.named("fireLineCheck")
+}

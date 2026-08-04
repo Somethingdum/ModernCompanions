@@ -132,6 +132,11 @@ public class ArcherRangedBowAttackGoal<T extends AbstractHumanCompanionEntity & 
                     float power = bow.getItem() instanceof BowItem
                             ? BowItem.getPowerForTime(ticksUsing)
                             : 1.0F;
+                    // Hold fire rather than put an arrow through the owner or an ally
+                    // standing between us and the target; retry on the next tick.
+                    if (!CompanionFireDiscipline.canFireAt(this.mob, target)) {
+                        return;
+                    }
                     // Stop using before firing so the client shows the full draw animation and release.
                     this.mob.stopUsingItem();
                     this.mob.performRangedAttack(target, power);

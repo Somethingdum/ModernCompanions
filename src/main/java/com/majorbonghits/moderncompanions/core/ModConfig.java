@@ -70,6 +70,9 @@ public final class ModConfig {
     public static ModConfigSpec.EnumValue<CompanionSurvivalProfile> COMBAT_SURVIVAL_PROFILE;
     public static ModConfigSpec.BooleanValue COMBAT_SECOND_WIND_ENABLED;
     public static ModConfigSpec.IntValue COMBAT_AVENGE_TICKS;
+    public static ModConfigSpec.DoubleValue COMBAT_FIRE_LANE_CLEARANCE;
+    public static ModConfigSpec.IntValue PERCEPTION_SIGHT_RANGE;
+    public static ModConfigSpec.IntValue PERCEPTION_MEMORY_TICKS;
     public static ModConfigSpec.IntValue ZONE_DEPTH_BELOW;
     public static ModConfigSpec.IntValue ZONE_HEIGHT_ABOVE;
     public static ModConfigSpec.BooleanValue TRAITS_ENABLED;
@@ -340,6 +343,19 @@ public final class ModConfig {
         COMBAT_AVENGE_TICKS = builder.translation("modern_companions.configuration.combat.avenge_ticks")
                 .comment("How long companions refuse to break off after you are downed or killed (20 ticks = 1 second).")
                 .defineInRange("avengeTicks", 600, 0, 24000);
+        COMBAT_FIRE_LANE_CLEARANCE = builder.translation("modern_companions.configuration.combat.fire_lane_clearance")
+                .comment("How close, in blocks, you or an ally may be to a companion's shot line before it holds fire.",
+                        "This is what stops archers putting arrows through your back. Set to 0 to disable the check.")
+                .defineInRange("fireLaneClearance", 1.2D, 0.0D, 8.0D);
+        PERCEPTION_SIGHT_RANGE = builder.translation("modern_companions.configuration.combat.sight_range")
+                .comment("Base distance at which companions notice things, before darkness, weather, and target",
+                        "sneaking reduce it. Deliberately separate from both pathfinding and target range.")
+                .defineInRange("sightRange", 24, 4, 64);
+        PERCEPTION_MEMORY_TICKS = builder.translation("modern_companions.configuration.combat.memory_ticks")
+                .comment("How long a companion remembers something it can no longer see (20 ticks = 1 second).",
+                        "Confidence decays over this window so they search where a target went rather than",
+                        "tracking it perfectly through walls.")
+                .defineInRange("memoryTicks", 200, 20, 2400);
         builder.pop();
 
         builder.translation("modern_companions.configuration.zones").push("zones");

@@ -488,3 +488,11 @@
 - Consider a `/zone` command set mirroring `/squad` for listing, renaming, and deleting zones; right now a zone can be created but not removed except by hitting the per-player cap.
 - Verify the interaction between a posted ward radius and the companion patrol radius. `wardRadius` derives from the zone footprint and overwrites whatever the player had configured, which is usually right but is silent.
 - The rod and the baton currently share the wand texture. Distinct textures would help, since both are held tools with different click semantics.
+
+## 2026-08-04 (perception limits and ranged fire discipline)
+
+- `PerceptionRules` is not yet wired into target acquisition. `AlertGoal` and `HuntGoal` still use vanilla nearest-target selection bounded by `CompanionTargetRange`; the cone, light, weather, sneak, and memory terms exist and are tested but nothing consults them yet. That wiring is the remaining half of the anti-omniscience work and needs a per-companion contact list to hang the memory on.
+- Smoke-test fire discipline from both sides: stand directly between an archer and a skeleton and confirm it holds, then step aside and confirm it resumes promptly rather than staying stuck.
+- Watch for an archer that holds fire indefinitely because an ally is parked in the lane. If that happens in practice, add a sidestep so the shooter repositions instead of waiting.
+- `CompanionFireDiscipline.canFireAt` runs an entity query per shot. It is bounded to the shot's bounding box, but if a large party shows up in profiling, cache the friendly list per tick rather than per shot.
+- Consider whether Alchemist splash potions and any area-of-effect spell should use a radius check rather than the line check; the current gate only covers direct-line projectiles.
