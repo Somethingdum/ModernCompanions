@@ -453,3 +453,12 @@
 - Test a charged creeper separately, since the wider blast changes both the back-off distance and the body-block trigger radius.
 - Watch for goal contention between `CreeperTacticsGoal` at priority 2 and the class attack goal also at priority 2. Both are needed simultaneously and only the tactics goal claims MOVE, but confirm in-world that attacking continues while spacing.
 - Consider giving ranged classes an explicit threat bonus for creepers once the threat model lands, so an Archer prioritises the creeper over a nearer zombie.
+
+## 2026-08-04 (survival model: not dying without cowardice)
+
+- Verify the guarantees in-world, not just in the unit test. The important one is guarantee 1: reduce a companion to near death while you are actively fighting next to it and confirm it does not step back at all.
+- Watch the withdrawal visually. It must read as backing away while facing the enemy; if it ever turns and sprints, the look control is losing to something else and the goal flags need revisiting.
+- `FightingWithdrawalGoal.isCornered` calls `createPath` every evaluation, which is a real pathfinding request. If profiling shows it is hot, cache the result for a few ticks or reuse the navigator's last failure instead.
+- Consider surfacing withdrawing state to the client so the HUD and Jade tooltip can show that a companion is breaking off rather than looking like it is fleeing; the flag is currently server-side only.
+- Second Wind currently triggers off a fixed 40-tick window and a 30 percent reduction. If it feels too strong or too weak, change those before changing the health threshold, since the threshold interacts with the withdraw boundary.
+- Once the perception layer lands, feed the cornered check from known contacts rather than a raw path attempt, so being surrounded counts as cornered even when a technically walkable route exists.

@@ -329,6 +329,11 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
     private int lastAppliedSwingTick = -1;
     private int combatGraceTicks;
     private int lastExhaustedMeleeTick = -100;
+    // Survival state. Withdrawing is server-side only; the goal owns it.
+    private boolean withdrawing;
+    private int avengeTicksRemaining;
+    private boolean secondWindUsedThisFight;
+    private int secondWindTicksRemaining;
 
     private static final ResourceLocation PREFERRED_WEAPON_MOD = ResourceLocation.fromNamespaceAndPath(
             com.majorbonghits.moderncompanions.ModernCompanions.MOD_ID, "preferred_weapon_bonus");
@@ -493,6 +498,9 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         // Movement goals live in strictly separated priority bands so intent, not
         // registration order, decides which one wins: guard hold (3) > follow (4)
         // > delivery (5) > jobs (6-10) > patrol return (11) > patrol stroll (12).
+        // Breaking off outranks every ordinary movement order but yields to creeper
+        // spacing, which is itself a survival behavior.
+        this.goalSelector.addGoal(2, new FightingWithdrawalGoal(this));
         this.goalSelector.addGoal(3, new MoveBackToGuardGoal(this));
         this.goalSelector.addGoal(4, new CustomFollowOwnerGoal(this, followSpeed(), true));
         this.goalSelector.addGoal(5, new DeliverToChestGoal(this, 1.1D));
@@ -1032,6 +1040,49 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
             return new net.minecraft.world.phys.Vec3(0, 0, 1);
         }
         return look.normalize();
+    }
+
+    /* ---------- Survival state ---------- */
+
+    /** True while the companion is deliberately opening distance to heal. */
+    public boolean isWithdrawing() {
+        return withdrawing;
+    }
+
+    public void setWithdrawing(boolean value) {
+        this.withdrawing = value;
+    }
+
+    /**
+     * Avenging suspends self-preservation entirely: a companion whose owner has
+     * just been downed or killed will not break off for any reason.
+     */
+    public boolean isAvenging() {
+        return avengeTicksRemaining > 0;
+    }
+
+    public void beginAvenging() {
+        this.avengeTicksRemaining = ModConfig.safeGet(ModConfig.COMBAT_AVENGE_TICKS);
+    }
+
+    /** Drives the avenge timer, the Second Wind window, and per-fight state resets. */
+    private void tickSurvivalState() {
+        if (avengeTicksRemaining > 0) avengeTicksRemaining--;
+        if (secondWindTicksRemaining > 0) secondWindTicksRemaining--;
+
+        LivingEntity target = getTarget();
+        if (target == null || !target.isAlive()) {
+            // Out of combat: the once-per-fight allowance refreshes.
+            secondWindUsedThisFight = false;
+            return;
+        }
+        float max = getMaxHealth();
+        double healthFraction = max <= 0.0F ? 1.0D : getHealth() / max;
+        if (ResolveRules.shouldGrantSecondWind(ModConfig.safeGet(ModConfig.COMBAT_SECOND_WIND_ENABLED),
+                withdrawing, secondWindUsedThisFight, healthFraction)) {
+            secondWindUsedThisFight = true;
+            secondWindTicksRemaining = 40;
+        }
     }
 
     public boolean isFollowing() {
@@ -2791,6 +2842,7 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
                 CompanionVoice.play(this, ModSounds.Cue.IDLE);
             }
             checkArmor();
+            tickSurvivalState();
             if (this.tickCount % 2 == 0 && isPickupEnabled() && this.isTame()) {
                 collectNearbyItems();
             }
@@ -3040,6 +3092,11 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         }
         float before = this.getHealth();
         float adjusted = applyEnduranceResistance(source, amount);
+        if (secondWindTicksRemaining > 0) {
+            // Second Wind reduces incoming damage only, so breaking off is survivable.
+            // It never increases damage dealt, keeping it outside the power budget.
+            adjusted *= 0.7F;
+        }
         hurtArmor(source, adjusted);
         if (ModConfig.safeGet(ModConfig.MORALE_ENABLED)) {
             float projected = before - adjusted;

@@ -26,6 +26,7 @@ import java.util.UUID;
 @EventBusSubscriber(modid = ModernCompanions.MOD_ID)
 public final class CompanionEvents {
     private static final double DIMENSION_FOLLOW_RADIUS = 35.0D;
+    private static final double AVENGE_ALERT_RADIUS = 32.0D;
     private static final Map<UUID, PendingDimensionFollow> pendingDimensionFollows = new HashMap<>();
 
     private CompanionEvents() {}
@@ -128,6 +129,28 @@ public final class CompanionEvents {
         if (event.getSource().getEntity() instanceof AbstractHumanCompanionEntity companion && event.getEntity().level() instanceof ServerLevel serverLevel) {
             companion.recordKill(event.getEntity());
             companion.giveExperiencePoints(event.getEntity().getExperienceReward(serverLevel, companion));
+        }
+        if (event.getEntity() instanceof ServerPlayer player) {
+            beginAvengingFor(player);
+        }
+    }
+
+    /**
+     * A downed owner suspends self-preservation for every nearby companion: they
+     * stop breaking off to heal and finish the fight instead. Whatever killed the
+     * owner also becomes the focus target where the companion has no target yet.
+     */
+    private static void beginAvengingFor(ServerPlayer player) {
+        if (!(player.level() instanceof ServerLevel serverLevel)) return;
+        var killer = player.getLastHurtByMob();
+        var box = player.getBoundingBox().inflate(AVENGE_ALERT_RADIUS);
+        for (AbstractHumanCompanionEntity companion : serverLevel.getEntitiesOfClass(
+                AbstractHumanCompanionEntity.class, box,
+                c -> c.isAlive() && c.isTame() && player.getUUID().equals(c.getOwnerUUID()))) {
+            companion.beginAvenging();
+            if (killer != null && killer.isAlive() && companion.getTarget() == null && companion.canHarm(killer)) {
+                companion.setTarget(killer);
+            }
         }
     }
 

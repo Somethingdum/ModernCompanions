@@ -65,6 +65,10 @@ public final class ModConfig {
     private static ModConfigSpec.BooleanValue ALERT_CREEPER_DEFAULT_MIGRATED;
     private static ModConfigSpec.BooleanValue ALERT_CREEPER_REMOVAL_MIGRATED;
     public static ModConfigSpec.EnumValue<CompanionCreeperPolicy> CREEPER_POLICY;
+    public static ModConfigSpec.DoubleValue COMBAT_WITHDRAW_HEALTH_FRACTION;
+    public static ModConfigSpec.EnumValue<CompanionSurvivalProfile> COMBAT_SURVIVAL_PROFILE;
+    public static ModConfigSpec.BooleanValue COMBAT_SECOND_WIND_ENABLED;
+    public static ModConfigSpec.IntValue COMBAT_AVENGE_TICKS;
     public static ModConfigSpec.BooleanValue TRAITS_ENABLED;
     public static ModConfigSpec.IntValue SECONDARY_TRAIT_CHANCE;
     public static ModConfigSpec.BooleanValue BOND_ENABLED;
@@ -304,6 +308,28 @@ public final class ModConfig {
         SHOW_JOBS_BUTTON = builder.translation("modern_companions.configuration.jobs.show_jobs_button")
                 .comment("Show the Jobs button in the companion inventory. Disabled by default while Jobs are experimental.")
                 .define("showJobsButton", false);
+        builder.pop();
+
+        builder.translation("modern_companions.configuration.combat").push("combat");
+        COMBAT_WITHDRAW_HEALTH_FRACTION = builder.translation("modern_companions.configuration.combat.withdraw_health_fraction")
+                .comment("Health fraction at or below which a wounded companion breaks off to heal, then rejoins.",
+                        "Withdrawal is a fighting withdrawal: they back away still facing the enemy, never turn and run.",
+                        "It is also vetoed outright while you are fighting nearby, while facing a creeper, while",
+                        "cornered, and while avenging you, so this never makes them abandon you.")
+                .defineInRange("withdrawHealthFraction", 0.30D, 0.0D, 1.0D);
+        COMBAT_SURVIVAL_PROFILE = builder.translation("modern_companions.configuration.combat.survival_profile")
+                .comment("RECKLESS: never break off, fight to the death every time.",
+                        "DISCIPLINED: break off at withdrawHealthFraction, heal, and return.",
+                        "CAUTIOUS: break off earlier, trading damage uptime for survivability.")
+                .defineEnum("survivalProfile", CompanionSurvivalProfile.DISCIPLINED);
+        COMBAT_SECOND_WIND_ENABLED = builder.translation("modern_companions.configuration.combat.second_wind")
+                .comment("Once per fight, a companion below 15% health that is actively withdrawing takes reduced",
+                        "damage briefly so breaking off is survivable. Reduces incoming damage only; never",
+                        "increases damage dealt.")
+                .define("secondWindEnabled", true);
+        COMBAT_AVENGE_TICKS = builder.translation("modern_companions.configuration.combat.avenge_ticks")
+                .comment("How long companions refuse to break off after you are downed or killed (20 ticks = 1 second).")
+                .defineInRange("avengeTicks", 600, 0, 24000);
         builder.pop();
 
         builder.translation("modern_companions.configuration.navigation").push("navigation");
