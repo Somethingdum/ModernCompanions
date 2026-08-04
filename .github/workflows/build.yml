@@ -1,0 +1,81 @@
+name: Build Mod Jar
+
+# Builds the installable mod jar and publishes it under a stable download link.
+# The asset name never changes, so the README link keeps working forever:
+#   https://github.com/Somethingdum/ModernCompanions/releases/latest/download/ModernCompanions.jar
+on:
+  push:
+    branches:
+      - main
+      - "claude/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make the Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      # `build` runs `check`, which includes every pure-logic regression task,
+      # so a broken rule fails here rather than in your world.
+      - name: Build and run checks
+        run: ./gradlew build --no-daemon --stacktrace
+
+      - name: Stage the jar under a stable name
+        id: stage
+        run: |
+          mkdir -p dist
+          # The build also produces a -sources jar; the mod jar is the other one.
+          JAR="$(find build/libs -maxdepth 1 -name '*.jar' ! -name '*-sources.jar' | head -n1)"
+          if [ -z "$JAR" ]; then
+            echo "No mod jar was produced in build/libs" >&2
+            ls -la build/libs || true
+            exit 1
+          fi
+          cp "$JAR" dist/ModernCompanions.jar
+          echo "version=$(grep '^version=' gradle.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+          ls -la dist
+
+      # Always available, even if the release step is skipped or fails.
+      - name: Upload the jar as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ModernCompanions-jar
+          path: dist/ModernCompanions.jar
+          if-no-files-found: error
+
+      # A single rolling release, so the download link is permanent.
+      - name: Publish the rolling download
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES="Modern Companions v${{ steps.stage.outputs.version }} for Minecraft 1.21.1 (NeoForge).
+
+          Built automatically from \`${{ github.ref_name }}\` at commit \`${{ github.sha }}\`.
+
+          Download **ModernCompanions.jar** below and drop it in your \`mods\` folder."
+          if gh release view latest >/dev/null 2>&1; then
+            gh release upload latest dist/ModernCompanions.jar --clobber
+            gh release edit latest --notes "$NOTES"
+          else
+            gh release create latest dist/ModernCompanions.jar \
+              --title "Modern Companions - latest build" \
+              --notes "$NOTES"
+          fi

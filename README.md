@@ -1,5 +1,30 @@
 # Modern Companions (NeoForge 1.21.1)
 
+## ⬇️ Download
+
+### **[➤ Download ModernCompanions.jar](https://github.com/Somethingdum/ModernCompanions/releases/latest/download/ModernCompanions.jar)**
+
+That link always gives you the newest build as **one single `.jar` file**. Nothing to unzip.
+
+**Installing it, start to finish:**
+
+1. Install the **[NeoForge installer for Minecraft 1.21.1](https://neoforged.net/)** and run it once (pick *Install client*). This adds a NeoForge profile to your Minecraft launcher.
+2. Click the download link above. You get one file: `ModernCompanions.jar`.
+3. Open your `mods` folder:
+   - **Windows:** press `Win + R`, paste `%appdata%\.minecraft\mods`, press Enter
+   - **macOS:** Finder → Go → Go to Folder → `~/Library/Application Support/minecraft/mods`
+   - **Linux:** `~/.minecraft/mods`
+   - If there is no `mods` folder, just create one with that exact name.
+4. Drop `ModernCompanions.jar` into it. Do not unzip it — Minecraft wants the `.jar` as-is.
+5. In the Minecraft launcher, select the **NeoForge 1.21.1** profile and hit Play.
+
+> If the download link 404s, no build has been published yet. Check the
+> [Actions tab](https://github.com/Somethingdum/ModernCompanions/actions) — the jar is built
+> automatically on every push, and is also attached to each run as a downloadable artifact.
+
+**Optional extras** (the mod works fine without any of them): Curios, Sophisticated Backpacks,
+Jade or WTHIT, JEI, Epic Fight, Iron's Spellbooks or Ars Nouveau, TacZ.
+
 ![Header](https://i.imgur.com/V29Cq8E.jpeg)
 
 Modern Companions is a NeoForge 1.21.1 port and rebrand of [Human Companions](https://www.curseforge.com/minecraft/mc-mods/human-companions), with new branding, Soul Gems, a Summoning Wand, custom weapons, optional magic companions, firearm specialists, and deeper companion progression.
