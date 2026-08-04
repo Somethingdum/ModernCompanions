@@ -44,6 +44,7 @@ public final class SquadService {
         CompanionSquadData data = data(owner);
         Squad squad = data.assign(owner.getUUID(), companion.getUUID(), slot);
         companion.setSquadId(squad.id());
+        companion.setSquadLabel(squad.slot() + ": " + squad.name());
         applyOrder(companion, squad.order());
         return squad;
     }

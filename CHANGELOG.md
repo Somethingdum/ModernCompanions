@@ -59,7 +59,7 @@
     * Companions with Jobs will only work when on patrol
     * Companions will switch to their desired tool when set to patrol, and back to their weapons when taken off patrol.
 
-## v3.49 - v3.57 (Companion AI Overhaul)
+## v3.49 - v3.60 (Companion AI Overhaul)
 
 ### Recruitment
 * The taming system is gone. Interacting with an unowned companion recruits them outright.
@@ -93,6 +93,19 @@
 * **Ranged companions no longer shoot through you.** Archers, arbalists, mages and firearm users hold fire when you or an ally are in the shot line.
 * Wounded companions break off to heal and return, but never while you are fighting nearby, never from a creeper, never when cornered, and never after you go down. When they do break off they back away facing the enemy rather than turning and running.
 * Once per fight, a companion below 15% health that is withdrawing takes reduced damage so breaking off is survivable.
+
+### Awareness
+* Companions only act on what they have actually sensed. Darkness, rain, storms, cover and **your sneaking** all reduce what they notice.
+* They remember a target briefly after losing sight of it and search where it was heading, rather than tracking it through walls or forgetting instantly.
+* Squadmates share what they have seen, but only first-hand sightings, so a rumour cannot bounce between them forever.
+* Target choice is now a judgement: whatever is hurting you is dealt with before a nearer harmless mob, creepers about to blow jump the queue, wounded targets get finished, and squads spread across targets instead of dogpiling.
+* Spotting something and reacting to it are not the same instant. Reaction time scales with Intelligence and is never instant.
+
+### Base defence
+* Guarded zones are swept for intruders. Anything a guard can see is dealt with normally.
+* Anything that gets inside **unseen** starts a timer, and you are warned if it is still unnoticed after the grace period. Companions cannot be omniscient, so rather than pretending nothing slips past, you are told when it does.
+* Guards receive a place to go and look, not a target. They investigate, and only fight once they genuinely see something.
+* New squad HUD in the corner showing each squad's name, strength and average health.
 
 ### Fixes
 * Patrol goals were being registered up to three times per companion, with stale radii.

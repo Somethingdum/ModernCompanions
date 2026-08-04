@@ -522,3 +522,11 @@
 - `ZoneBreachTracker` holds its unseen-since and last-warned maps in static fields keyed by zone id. They are pruned as intruders leave, but a deleted zone leaks two small entries until `forget` is called, and nothing calls it yet. Wire it into zone deletion when a `/zone remove` command exists.
 - The zone-intrusion term in `ThreatAssessment` is still passed false everywhere. Now that the tracker knows which entities are inside a zone, it could mark contacts so guards prioritise intruders over ambient mobs outside the walls.
 - Consider whether the investigation cue should also be raised by hearing, as the plan describes. Only zone breaches raise cues today, so a companion escorting the player never investigates anything.
+
+## 2026-08-04 (squad HUD and data-driven hunt targets)
+
+- `SquadHudOverlay` is the least-verified file in this whole series. It uses `RegisterGuiLayersEvent`, `VanillaGuiLayers.HOTBAR`, and a `LayeredDraw.Layer` lambda, none of which could be compile-checked in the authoring environment. If the local build fails, check this file first; the fix is almost certainly an import or a changed registration method name rather than the logic.
+- The HUD counts only loaded companions. If a squad is posted at a distant base, it will not appear. Consider whether that is the desired reading or whether the full roster should be shown greyed out.
+- Now that `HuntGoal` defaults to every adult wild animal, verify it does not surprise anyone by hunting villagers' livestock or a modded creature that is technically an `Animal` but should not be attacked. `hunter_denied` is the escape hatch and should be populated with anything found this way.
+- Remaining unimplemented work, in rough value order: a hearing channel so companions investigate noises rather than only zone breaches; melee positioning, meaning strafing ranged attackers and not body-blocking the owner; the coarse route planner for marches beyond the navigator's range; number-key control groups and the radial menu; and the ambition items such as chat bubbles and companion-to-companion dialogue.
+- Nothing in this series has been observed in a running game. The situation matrix in section 21 of the plan is the checklist; run it before treating any of this as finished.

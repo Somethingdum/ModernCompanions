@@ -7,24 +7,26 @@
 
 ---
 
-## Implementation status (v3.57)
-
-Eight of the twelve phases are implemented and committed. What is **done**:
+## Implementation status (v3.60)
 
 | Phase | Status | Version |
 |---|---|---|
-| 0 · Defect repairs | **Done** — 15 of the 30 register items fixed | 3.49 |
+| 0 · Defect repairs | **Done** — 17 of 30 register items; D-08 needs in-world repro, D-28 is the separate jobs revamp | 3.49 |
 | 1 · Navigation core | **Done** — own search range, node budget, hazards, step height | 3.50 |
-| 2 · Long-range routing | **Partial** — staged bearing-walk, no coarse corridor planner yet | 3.50 |
+| 2 · Long-range routing | **Partial** — staged bearing-walk; no coarse corridor planner | 3.50 |
 | 3 · Taming removal + starter | **Done** | 3.51 / 3.57 |
-| 4 · Stances + squads | **Done** — stance derives over legacy booleans (see deviation below) | 3.52 |
-| 5 · Command layer | **Partial** — baton and `/squad` done; no HUD, control groups, or radial | 3.52 |
-| 6 · Perception + blackboard | **Partial** — rules written and tested, not yet wired into targeting | 3.54 |
-| 7 · Threat + focus fire | **Not started** | — |
-| 8 · Combat tactics, creepers, survival | **Done** for creepers and survival; broader tactics not started | 3.53 / 3.55 |
-| 9 · Zones + ward behaviour | **Partial** — zones, rod, sentry distribution done; no breach ledger | 3.56 |
-| 10 · Ambition pass | **Not started** | — |
-| 11 · Tuning + profiling | **Not started** | — |
+| 4 · Stances + squads | **Done** — stance derives over legacy booleans (see deviations) | 3.52 |
+| 5 · Command layer | **Mostly done** — baton, `/squad`, squad HUD; no control groups or radial | 3.52 / 3.60 |
+| 6 · Perception | **Done** — sensing wired into acquisition; no hearing channel | 3.54 / 3.58 |
+| 7 · Threat + focus fire | **Done** — scored priority, ally discount, switch hysteresis | 3.58 |
+| 8 · Combat tactics, creepers, survival | **Done** for creepers, survival, fire discipline; melee positioning not started | 3.53 / 3.55 |
+| 9 · Zones + ward behaviour | **Done** — zones, rod, sentry spread, breach ledger, investigation | 3.56 / 3.59 |
+| 10 · Ambition pass | **Not started** — chat bubbles, companion dialogue, barracks | — |
+| 11 · Tuning + profiling | **Not started** — nothing has been measured in a running game | — |
+
+**Nine pure rule suites** cover the decision logic and all pass: alert-exclusion
+migration, teleport policy, creeper engagement, resolve, perception, fire line,
+threat assessment, stance, and zone geometry. Each is registered as a `check` task.
 
 **Deviations from this spec, and why:**
 

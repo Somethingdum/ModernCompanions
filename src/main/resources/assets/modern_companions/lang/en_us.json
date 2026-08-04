@@ -847,5 +847,6 @@
   "modern_companions.configuration.starter.grant_tools": "Grant Squad Tools",
   "modern_companions.configuration.combat.sweep_interval": "Perception Sweep Interval",
   "message.modern_companions.zone.breach": "Something is inside %s that your guards have not seen (%s).",
-  "modern_companions.configuration.zones.alert_seconds": "Unseen Breach Warning Delay"
+  "modern_companions.configuration.zones.alert_seconds": "Unseen Breach Warning Delay",
+  "modern_companions.configuration.starter.squad_hud": "Show Squad HUD"
 }

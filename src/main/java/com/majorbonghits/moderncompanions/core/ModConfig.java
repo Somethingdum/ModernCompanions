@@ -80,6 +80,7 @@ public final class ModConfig {
     public static ModConfigSpec.BooleanValue STARTER_ENABLED;
     public static ModConfigSpec.EnumValue<StarterCompanionGear> STARTER_GEAR;
     public static ModConfigSpec.BooleanValue STARTER_GRANT_TOOLS;
+    public static ModConfigSpec.BooleanValue SQUAD_HUD_ENABLED;
     public static ModConfigSpec.BooleanValue TRAITS_ENABLED;
     public static ModConfigSpec.IntValue SECONDARY_TRAIT_CHANCE;
     public static ModConfigSpec.BooleanValue BOND_ENABLED;
@@ -380,6 +381,11 @@ public final class ModConfig {
                 .comment("Also give the Command Baton and Perimeter Rod, so squads and base perimeters are usable",
                         "immediately rather than needing to be crafted first.")
                 .define("grantTools", true);
+        SQUAD_HUD_ENABLED = builder.translation("modern_companions.configuration.starter.squad_hud")
+                .comment("Show a small corner readout of your squads: name, how many are with you, and their",
+                        "average health. Built from nearby loaded companions, so it reflects the squad you can",
+                        "actually see rather than the full roster.")
+                .define("squadHud", true);
         builder.pop();
 
         builder.translation("modern_companions.configuration.zones").push("zones");

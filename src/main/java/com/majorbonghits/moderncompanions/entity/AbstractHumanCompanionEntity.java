@@ -164,6 +164,9 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
             .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> SQUAD_ID = SynchedEntityData
             .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.STRING);
+    /** Display label only ("1: Alpha"), synced so the HUD needs no extra packet. */
+    private static final EntityDataAccessor<String> SQUAD_LABEL = SynchedEntityData
+            .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Float> EXP_PROGRESS = SynchedEntityData
             .defineId(AbstractHumanCompanionEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Integer> SPECIALIST = SynchedEntityData
@@ -421,6 +424,7 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         minerOreIndex = 0;
         builder.define(FAVORITE_FOOD, "");
         builder.define(SQUAD_ID, "");
+        builder.define(SQUAD_LABEL, "");
         builder.define(EXP_PROGRESS, 0.0F);
         builder.define(STR, 4);
         builder.define(DEX, 4);
@@ -1112,6 +1116,19 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
 
     public void setSquadId(@Nullable UUID squadId) {
         this.entityData.set(SQUAD_ID, squadId == null ? "" : squadId.toString());
+        if (squadId == null) setSquadLabel("");
+    }
+
+    /**
+     * Human-readable squad label. Synced purely so the client HUD can group and
+     * name squads from entity data alone, without a dedicated roster packet.
+     */
+    public String getSquadLabel() {
+        return this.entityData.get(SQUAD_LABEL);
+    }
+
+    public void setSquadLabel(String label) {
+        this.entityData.set(SQUAD_LABEL, label == null ? "" : label);
     }
 
     /* ---------- Survival state ---------- */
