@@ -171,3 +171,13 @@ tasks.processResources.configure {
         expand(project.properties)
     }
 }
+
+tasks.register("teleportPolicyCheck", JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = "com.majorbonghits.moderncompanions.entity.ai.CompanionTeleportRulesTest"
+    jvmArgs "-ea"
+}
+
+tasks.named("check") {
+    dependsOn tasks.named("teleportPolicyCheck")
+}

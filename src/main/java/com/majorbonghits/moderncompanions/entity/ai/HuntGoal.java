@@ -28,4 +28,10 @@ public class HuntGoal extends NearestAttackableTargetGoal<LivingEntity> {
         return companion.getJob() != com.majorbonghits.moderncompanions.entity.job.CompanionJob.HUNTER
                 && companion.isHunting() && super.canUse();
     }
+
+    /** Hunt range stays independent of the (much larger) pathfinding FOLLOW_RANGE. */
+    @Override
+    protected double getFollowDistance() {
+        return CompanionTargetRange.blocks();
+    }
 }

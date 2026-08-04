@@ -340,8 +340,27 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
             nav.setCanOpenDoors(true);
             nav.setCanFloat(true);
         }
-        this.setPathfindingMalus(PathType.WATER, 0.0F);
+        applyCompanionPathfindingMaluses();
+    }
+
+    /**
+     * Companions are humanoids in armor, not wandering mobs. Water is crossable
+     * but costed so a shore or bridge wins when one exists, and everything that
+     * damages a humanoid is made expensive or impassable so routes go around it.
+     * Negative values mean "never", positive values are added path cost.
+     */
+    private void applyCompanionPathfindingMaluses() {
+        this.setPathfindingMalus(PathType.WATER, ModConfig.safeGet(ModConfig.NAV_WATER_MALUS).floatValue());
         this.setPathfindingMalus(PathType.WATER_BORDER, 0.0F);
+        // Only lava is truly impassable. Everything else uses a heavy cost rather
+        // than -1 so a companion that is already standing in a hazard can still
+        // path its way out instead of being stranded there.
+        this.setPathfindingMalus(PathType.LAVA, -1.0F);
+        this.setPathfindingMalus(PathType.DAMAGE_FIRE, 24.0F);
+        this.setPathfindingMalus(PathType.DANGER_FIRE, 16.0F);
+        this.setPathfindingMalus(PathType.DAMAGE_OTHER, 16.0F);
+        this.setPathfindingMalus(PathType.DANGER_OTHER, 8.0F);
+        this.setPathfindingMalus(PathType.POWDER_SNOW, 24.0F);
     }
 
     @Override
@@ -355,7 +374,15 @@ public abstract class AbstractHumanCompanionEntity extends TamableAnimal {
         double baseHealth = ModConfig.BASE_HEALTH != null ? ModConfig.safeGet(ModConfig.BASE_HEALTH).doubleValue()
                 : 20.0D;
         return TamableAnimal.createMobAttributes()
-                .add(Attributes.FOLLOW_RANGE, 20.0D)
+                // Minecraft derives both the path search radius and the visited-node
+                // budget from FOLLOW_RANGE, so this is the pathfinding range, not the
+                // aggro range. Targeting distance is capped independently by the
+                // target goals via getFollowDistance so raising this does not make
+                // companions notice hostiles any further away than before.
+                .add(Attributes.FOLLOW_RANGE, ModConfig.safeGet(ModConfig.NAV_SEARCH_RANGE).doubleValue())
+                // Vanilla mobs step 0.6 blocks and must jump for a full block, which is
+                // why companions stall on stairs, roots, and single-block ledges.
+                .add(Attributes.STEP_HEIGHT, ModConfig.safeGet(ModConfig.NAV_STEP_HEIGHT))
                 .add(Attributes.MAX_HEALTH, baseHealth)
                 .add(Attributes.ATTACK_DAMAGE, 1.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.32D)

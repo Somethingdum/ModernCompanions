@@ -33,4 +33,10 @@ public class AlertGoal extends NearestAttackableTargetGoal<LivingEntity> {
     public boolean canUse() {
         return companion.isAlert() && super.canUse();
     }
+
+    /** Aggro range stays independent of the (much larger) pathfinding FOLLOW_RANGE. */
+    @Override
+    protected double getFollowDistance() {
+        return CompanionTargetRange.blocks();
+    }
 }

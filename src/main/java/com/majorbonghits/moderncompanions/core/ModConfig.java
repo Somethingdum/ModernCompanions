@@ -90,6 +90,16 @@ public final class ModConfig {
     public static ModConfigSpec.ConfigValue<List<? extends String>> JOB_MINER_DENY_BLOCKS;
     public static ModConfigSpec.BooleanValue JOB_ASSIGNED_CHESTS_CHUNKLOAD;
     public static ModConfigSpec.BooleanValue SHOW_JOBS_BUTTON;
+    public static ModConfigSpec.IntValue NAV_SEARCH_RANGE;
+    public static ModConfigSpec.DoubleValue NAV_NODE_BUDGET_MULTIPLIER;
+    public static ModConfigSpec.DoubleValue NAV_STEP_HEIGHT;
+    public static ModConfigSpec.DoubleValue NAV_WATER_MALUS;
+    public static ModConfigSpec.DoubleValue NAV_CATCH_UP_MULTIPLIER;
+    public static ModConfigSpec.IntValue PERCEPTION_TARGET_RANGE;
+    public static ModConfigSpec.EnumValue<CompanionTeleportPolicy> NAV_TELEPORT_POLICY;
+    public static ModConfigSpec.IntValue NAV_TELEPORT_MIN_DISTANCE;
+    public static ModConfigSpec.IntValue NAV_TELEPORT_NO_ROUTE_TICKS;
+    public static ModConfigSpec.IntValue NAV_TELEPORT_COOLDOWN_TICKS;
 
     /**
      * Safely read a config value even during very early lifecycle (e.g., attribute construction) by
@@ -282,6 +292,48 @@ public final class ModConfig {
         SHOW_JOBS_BUTTON = builder.translation("modern_companions.configuration.jobs.show_jobs_button")
                 .comment("Show the Jobs button in the companion inventory. Disabled by default while Jobs are experimental.")
                 .define("showJobsButton", false);
+        builder.pop();
+
+        builder.translation("modern_companions.configuration.navigation").push("navigation");
+        NAV_SEARCH_RANGE = builder.translation("modern_companions.configuration.navigation.search_range")
+                .comment("How far, in blocks, a companion may plan a path. Minecraft sizes both the path search radius",
+                        "and the visited-node budget from this value, so raising it is what lets companions walk long",
+                        "distances instead of falling back to teleporting. Targeting range is configured separately.")
+                .defineInRange("searchRange", 64, 16, 128);
+        NAV_NODE_BUDGET_MULTIPLIER = builder.translation("modern_companions.configuration.navigation.node_budget_multiplier")
+                .comment("Multiplier on how many path nodes may be visited per search. Vanilla mobs use 1.0.",
+                        "Higher values solve mazes, buildings, and cave systems at the cost of pathfinding time.")
+                .defineInRange("nodeBudgetMultiplier", 3.0D, 1.0D, 8.0D);
+        NAV_STEP_HEIGHT = builder.translation("modern_companions.configuration.navigation.step_height")
+                .comment("Height in blocks a companion can step up without jumping. Players effectively manage 1.0",
+                        "with auto-jump; the vanilla mob default of 0.6 is why companions stall on single blocks.")
+                .defineInRange("stepHeight", 1.0D, 0.5D, 1.5D);
+        NAV_WATER_MALUS = builder.translation("modern_companions.configuration.navigation.water_malus")
+                .comment("Path cost added for routing through water. 0 makes companions swim straight through lakes",
+                        "in full armor; a positive cost makes them prefer a shore or bridge when one exists.")
+                .defineInRange("waterMalus", 8.0D, 0.0D, 64.0D);
+        NAV_CATCH_UP_MULTIPLIER = builder.translation("modern_companions.configuration.navigation.catch_up_multiplier")
+                .comment("Speed multiplier applied to a following companion that has fallen far behind and is out of",
+                        "combat. This is what replaces teleporting: they run to catch up instead of blinking to you.")
+                .defineInRange("catchUpMultiplier", 1.25D, 1.0D, 2.0D);
+        NAV_TELEPORT_POLICY = builder.translation("modern_companions.configuration.navigation.teleport_policy")
+                .comment("NEVER disables leash teleporting entirely. LAST_RESORT only teleports when the companion is",
+                        "far away, has failed to find a route, is out of combat, is outside your view, and is off",
+                        "cooldown. LEGACY restores the original teleport-as-soon-as-far-away behavior.")
+                .defineEnum("teleportPolicy", CompanionTeleportPolicy.LAST_RESORT);
+        NAV_TELEPORT_MIN_DISTANCE = builder.translation("modern_companions.configuration.navigation.teleport_min_distance")
+                .comment("LAST_RESORT only: minimum distance in blocks before a teleport may be considered.")
+                .defineInRange("teleportMinDistance", 64, 16, 256);
+        NAV_TELEPORT_NO_ROUTE_TICKS = builder.translation("modern_companions.configuration.navigation.teleport_no_route_ticks")
+                .comment("LAST_RESORT only: how long the companion must fail to find a walking route first (20 ticks = 1 second).")
+                .defineInRange("teleportNoRouteTicks", 300, 20, 6000);
+        NAV_TELEPORT_COOLDOWN_TICKS = builder.translation("modern_companions.configuration.navigation.teleport_cooldown_ticks")
+                .comment("LAST_RESORT only: minimum ticks between teleports for one companion.")
+                .defineInRange("teleportCooldownTicks", 1200, 20, 24000);
+        PERCEPTION_TARGET_RANGE = builder.translation("modern_companions.configuration.navigation.target_range")
+                .comment("How far a companion will look for hostiles, in blocks. Deliberately separate from searchRange",
+                        "so companions can walk a long way without also aggroing everything within that distance.")
+                .defineInRange("targetRange", 24, 8, 64);
         builder.pop();
 
         COMMON_SPEC = builder.build();

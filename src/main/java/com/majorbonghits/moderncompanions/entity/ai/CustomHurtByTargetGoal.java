@@ -80,4 +80,13 @@ public class CustomHurtByTargetGoal extends TargetGoal {
     protected void alertOther(Mob mob, LivingEntity target) {
         mob.setTarget(target);
     }
+
+    /**
+     * Bounds both retaliation reach and the squad-alert radius to the configured
+     * target range rather than the much larger pathfinding FOLLOW_RANGE.
+     */
+    @Override
+    protected double getFollowDistance() {
+        return CompanionTargetRange.blocks();
+    }
 }

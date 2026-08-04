@@ -435,3 +435,12 @@
 - Verify the D-25 repro explicitly: place a uniquely named enchanted sword directly into a companion's main-hand equipment slot with no copy in cargo, save, reload, and confirm the sword survives. Then repeat with the sword also present in cargo and confirm exactly one copy remains.
 - Watch for guard and patrol boundary behavior specifically: companions should settle rather than oscillate at the radius edge, and the navigator should be issued at most one path per ten ticks while returning.
 - Epic Fight interaction needs a live check now that class weapon goals register during base-class construction rather than in subclass constructors; confirm `CompanionEpicFightPatch.selectGoalToRemove` still finds and replaces them.
+
+## 2026-08-04 (navigation overhaul: walk instead of teleport)
+
+- Measure the pathfinding cost change before accepting the defaults. Search radius 64 with a 3.0 node multiplier is roughly a tenfold increase in worst-case work per path request versus vanilla; if the server tick suffers with a large party, lower `nodeBudgetMultiplier` before lowering `searchRange`, since the radius is what removes the teleporting.
+- Verify the aggro decoupling explicitly: stand 40 blocks from a companion with a hostile 30 blocks away and confirm the companion paths to you without acquiring the hostile. If it aggros, a target goal is still inheriting `FOLLOW_RANGE`.
+- Test `teleportPolicy=NEVER` across a deliberately unroutable gap, such as the far side of a ravine with no bridge, and confirm the companion reports being stuck rather than freezing silently. That path currently just fails to move; the explicit stuck reporting arrives with the order system.
+- Confirm `Attributes.STEP_HEIGHT` at 1.0 does not let companions climb terrain the player cannot; if it looks wrong, 0.6 restores vanilla mob behavior at the cost of the stalling.
+- The water malus is applied once at construction. If armor-aware water costs are wanted later, recompute it when equipment changes rather than making it a constant.
+- Add a coarse waypoint route planner for destinations beyond `searchRange`, as described in the plan. The current change makes 64-block paths work; a several-hundred-block march still needs corridor planning.
